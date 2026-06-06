@@ -1,8 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getLawById } from "@/lib/laws";
 
-export const runtime = "edge";
-
 const client = new Anthropic();
 
 export async function POST(req: Request) {
