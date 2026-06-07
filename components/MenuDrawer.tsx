@@ -6,8 +6,9 @@ import { useUser, useClerk } from "@clerk/nextjs";
 import { getFontSize, setFontSize, FontSize } from "@/lib/storage";
 import {
   Menu, X, Home, TrendingUp, Type, BookOpen,
-  ChevronRight, Zap, LogOut, LogIn, Crown,
+  ChevronRight, Zap, LogOut, LogIn, Crown, MessageSquarePlus,
 } from "lucide-react";
+import FeedbackModal from "@/components/FeedbackModal";
 
 const NAV = [
   { href: "/", label: "ホーム", icon: Home },
@@ -22,6 +23,7 @@ const FONT_BASE: Record<FontSize, string> = { sm: "14px", md: "16px", lg: "18px"
 export default function MenuDrawer() {
   const [open, setOpen] = useState(false);
   const [fontSize, setFs] = useState<FontSize>("md");
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const { user, isLoaded } = useUser();
@@ -191,10 +193,21 @@ export default function MenuDrawer() {
           )}
         </nav>
 
+        <div className="px-3 pb-2">
+          <button
+            onClick={() => { setOpen(false); setFeedbackOpen(true); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-amber-400 hover:bg-amber-500/10 border border-amber-500/20 transition-all min-h-[48px]"
+          >
+            <MessageSquarePlus className="w-4 h-4" />
+            機能・法律を追加リクエスト
+          </button>
+        </div>
+
         <div className="px-5 py-4 border-t border-slate-800">
           <p className="text-xs text-slate-600 text-center">Powered by Gemini + e-Gov</p>
         </div>
       </div>
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
     </>
   );
 }
