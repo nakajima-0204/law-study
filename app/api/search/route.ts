@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { GEMINI_MODEL } from "@/lib/model";
 import { LAW_DOMAINS } from "@/lib/laws";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
@@ -15,7 +16,6 @@ export async function POST(req: Request) {
   const { query } = await req.json();
   if (!query?.trim()) return Response.json([]);
 
-  // まずクライアントサイドで絞れる簡易マッチも返す
   const lower = query.toLowerCase();
   const quickMatches = ALL_LAWS.filter(
     (l) =>
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 - 「離婚」→ 民法（親族・相続）、DV防止法、家事事件手続法
 - 「解雇」→ 労働契約法、労働基準法、労働審判法
 - 「著作権侵害」→ 著作権法、不正競争防止法
-- 「交通事故」→ 民法（不法行為）、道路交通法、自賠責
+- 「交通事故」→ 民法（不法行為）、道路交通法
 
 【法律リスト】
 ${LAW_LIST_TEXT}
@@ -52,7 +52,7 @@ JSONのみ返してください。`;
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-05-20",
+      model: GEMINI_MODEL,
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: { thinkingConfig: { thinkingBudget: 0 } },
     });
@@ -63,7 +63,6 @@ JSONのみ返してください。`;
 
     const aiResults: { id: string; name: string; reason: string }[] = JSON.parse(match[0]);
 
-    // AI結果とクイックマッチをマージ（重複除去）
     const seen = new Set(aiResults.map((r) => r.id));
     const merged = [
       ...aiResults,

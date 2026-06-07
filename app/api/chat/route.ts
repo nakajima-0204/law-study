@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { GEMINI_MODEL } from "@/lib/model";
 import { getLawById } from "@/lib/laws";
 import { fetchLawArticles, articlesToContext } from "@/lib/egov";
 import { checkLimit } from "@/lib/limits";
@@ -16,7 +17,6 @@ export async function POST(req: Request) {
   const law = getLawById(lawId);
   const lawName = law?.name ?? "法律全般";
 
-  // e-Gov フェッチを非同期で開始（並列処理）
   const articlesPromise = law?.egov_id
     ? fetchLawArticles(law.egov_id)
     : Promise.resolve([]);
@@ -38,7 +38,6 @@ export async function POST(req: Request) {
 2. 最高裁判所判例集 https://www.courts.go.jp/app/hanrei_jp/search1
 3. 法務省・各省庁の公式通知・立法担当者の解説
 4. 権威ある法律学者の通説・有力説
-5. Google検索による最新の法改正・新判例情報
 
 ━━ 回答の構造 ━━
 質問の性質に応じて以下を使い分ける：
@@ -100,7 +99,7 @@ ${lawContext}`;
   });
 
   const response = await ai.models.generateContentStream({
-    model: "gemini-2.5-flash-preview-05-20",
+    model: GEMINI_MODEL,
     contents,
     config: {
       systemInstruction,

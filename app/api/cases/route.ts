@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { GEMINI_MODEL } from "@/lib/model";
 import { getLawById } from "@/lib/laws";
 import { checkLimit } from "@/lib/limits";
 
@@ -90,7 +91,7 @@ JSONのみを返してください。前後に説明を入れないこと。`;
   }
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-preview-05-20",
+    model: GEMINI_MODEL,
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     config: {
       tools: [{ googleSearch: {} }],
