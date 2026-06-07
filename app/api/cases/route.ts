@@ -5,15 +5,20 @@ import { checkLimit } from "@/lib/limits";
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 const OFFICIAL_SOURCES = `
-【必ず参照すべき公式情報源】
-- 最高裁判所判例集: https://www.courts.go.jp/app/hanrei_jp/search1
-- 最高裁判所裁判例情報: https://www.courts.go.jp/app/hanrei_jp/detail2
-- e-Gov法令データベース: https://laws.e-gov.go.jp
-- 法務省: https://www.moj.go.jp
-- 各省庁の公式サイト
+━━ 必須参照先（この順序で優先） ━━
+1. 最高裁判所判例集: https://www.courts.go.jp/app/hanrei_jp/search1
+2. 最高裁判所裁判例情報: https://www.courts.go.jp/app/hanrei_jp/detail2
+3. e-Gov法令データベース: https://laws.e-gov.go.jp
+4. 法務省: https://www.moj.go.jp
+5. 各省庁の公式サイト・立法担当者の解説
 
-上記の公式情報源から取得した情報を優先してください。
-判例の引用形式: 「最判（最大判）○年○月○日、民集○巻○号○頁」または「最決○年○月○日」
+━━ 判例引用の厳格なルール ━━
+- 最高裁大法廷: 「最大判○年○月○日、民集○巻○号○頁」
+- 最高裁小法廷: 「最判○年○月○日、民集○巻○号○頁」
+- 最高裁決定: 「最決○年○月○日、刑集○巻○号○頁」
+- 高裁: 「○高判○年○月○日」
+- 地裁: 「○地判○年○月○日」
+- 引用情報が不確かな場合は「詳細は最高裁判所判例集で確認してください」と付記する
 `;
 
 export async function POST(req: Request) {
@@ -29,69 +34,59 @@ export async function POST(req: Request) {
 
   let prompt = "";
 
-  if (type === "landmark") {
-    prompt = `${lawName}に関する重要判例・リーディングケースを5件、最高裁判所判例集（https://www.courts.go.jp/app/hanrei_jp/search1）などの公式ソースを検索して教えてください。
-
-${OFFICIAL_SOURCES}
-
-各判例について以下のJSON配列形式で返してください：
-[
+  const caseSchema = `[
   {
     "title": "判例の通称・事件名",
     "court": "裁判所名（例：最高裁判所大法廷）",
     "date": "判決日（例：2023年3月15日）",
-    "citation": "引用情報（例：民集77巻3号1頁）",
-    "article": "関連条文（例：民法709条）",
-    "summary": "事案の概要（3〜4文）",
-    "holding": "判決の要旨・法的判断（3〜4文）",
-    "significance": "この判例の重要性・実務への影響（2〜3文）",
+    "citation": "正確な引用情報（例：民集77巻3号1頁）",
+    "article": "関連条文（例：民法709条・710条）",
+    "summary": "事案の概要：当事者・事実関係・争点を明確に（3〜5文）",
+    "holding": "判旨：裁判所の法的判断と理由を正確に（3〜5文）",
+    "significance": "判例の意義：法解釈・実務・その後への影響（2〜3文）",
     "source": "参照した公式URL"
   }
-]
+]`;
 
-必ずJSON配列のみを返してください。`;
+  if (type === "landmark") {
+    prompt = `${lawName}を深く学ぶ上で絶対に押さえるべき重要判例・リーディングケースを5件、最高裁判所判例集（https://www.courts.go.jp/app/hanrei_jp/search1）を必ず参照して教えてください。
+
+${OFFICIAL_SOURCES}
+
+選定基準：
+- その分野の法解釈を確立・変更した判例
+- 法学部の教科書・試験で必出の判例
+- 実務・立法に大きな影響を与えた判例
+- 最新の重要判例も含める
+
+各判例について以下のJSON配列形式のみで返してください：
+${caseSchema}
+
+JSONのみを返してください。前後に説明を入れないこと。`;
+
   } else if (type === "search") {
-    prompt = `${lawName}に関して「${query}」というキーワードで、最高裁判所判例集（https://www.courts.go.jp/app/hanrei_jp/search1）を中心に公式ソースから関連する判例・事例を3〜5件検索してください。
+    prompt = `${lawName}に関して「${query}」というキーワードで関連する判例・事例を最高裁判所判例集（https://www.courts.go.jp/app/hanrei_jp/search1）から3〜5件検索してください。
 
 ${OFFICIAL_SOURCES}
 
-以下のJSON配列形式で返してください：
-[
-  {
-    "title": "判例の通称・事件名",
-    "court": "裁判所名",
-    "date": "判決日",
-    "citation": "引用情報",
-    "article": "関連条文",
-    "summary": "事案の概要（3〜4文）",
-    "holding": "判決の要旨・法的判断（3〜4文）",
-    "significance": "この判例の重要性（2〜3文）",
-    "source": "参照した公式URL"
-  }
-]
+学習者が「${query}」を理解する上で特に重要な判例を優先してください。
 
-必ずJSON配列のみを返してください。`;
+以下のJSON配列形式のみで返してください：
+${caseSchema}
+
+JSONのみを返してください。前後に説明を入れないこと。`;
+
   } else if (type === "recent") {
-    prompt = `${lawName}に関する直近2〜3年以内の新しい判例・法改正を、最高裁判所（https://www.courts.go.jp）・e-Gov（https://laws.e-gov.go.jp）・法務省・各省庁の公式情報から検索して5件教えてください。
+    prompt = `${lawName}に関する直近2〜3年以内の新しい判例・法改正・重要な法的動向を最高裁判所（https://www.courts.go.jp）・e-Gov（https://laws.e-gov.go.jp）・法務省の公式情報から5件教えてください。
 
 ${OFFICIAL_SOURCES}
 
-以下のJSON配列形式で返してください：
-[
-  {
-    "title": "判例・法改正の名称",
-    "court": "裁判所名または「法改正」「省令改正」",
-    "date": "日付",
-    "citation": "引用情報または法令番号",
-    "article": "関連条文",
-    "summary": "内容の概要（3〜4文）",
-    "holding": "判断内容・改正内容（3〜4文）",
-    "significance": "重要性・実務への影響（2〜3文）",
-    "source": "参照した公式URL"
-  }
-]
+実務・学習に影響する重要なものを優先してください。
 
-必ずJSON配列のみを返してください。`;
+以下のJSON配列形式のみで返してください：
+${caseSchema}
+
+JSONのみを返してください。前後に説明を入れないこと。`;
   }
 
   const response = await ai.models.generateContent({
