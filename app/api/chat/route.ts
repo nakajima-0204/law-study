@@ -1,7 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import { getLawById } from "@/lib/laws";
 
-const client = new Anthropic();
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 export async function POST(req: Request) {
   const { messages, lawId, imageBase64 } = await req.json();
@@ -9,49 +9,48 @@ export async function POST(req: Request) {
   const law = getLawById(lawId);
   const lawName = law?.name ?? "法律全般";
 
-  const systemPrompt = `あなたは${lawName}の専門家です。
+  const systemInstruction = `あなたは${lawName}の専門家です。
 ユーザーの質問に対して、正確でわかりやすい解説を日本語で行ってください。
 - 条文番号を引用して説明してください
-- 重要な判例があれば言及してください
+- 重要な判例があれば最新のものを優先して言及してください
 - 難しい法律用語は噛み砕いて説明してください
-- 最新の法改正情報も考慮してください`;
+- Google検索で得た最新の法改正・判例情報を積極的に活用してください`;
 
-  const formattedMessages = messages.map((m: { role: string; content: string }) => ({
-    role: m.role as "user" | "assistant",
-    content: m.content,
-  }));
+  const contents = messages.map((m: { role: string; content: string }, i: number) => {
+    const isLast = i === messages.length - 1;
+    const isUser = m.role === "user";
 
-  if (imageBase64) {
-    const lastMsg = formattedMessages[formattedMessages.length - 1];
-    if (lastMsg.role === "user") {
-      lastMsg.content = [
-        {
-          type: "image",
-          source: { type: "base64", media_type: "image/jpeg", data: imageBase64 },
-        },
-        { type: "text", text: lastMsg.content || "この問題を解説してください。" },
-      ];
+    if (isLast && isUser && imageBase64) {
+      return {
+        role: "user",
+        parts: [
+          { inlineData: { mimeType: "image/jpeg", data: imageBase64 } },
+          { text: m.content || "この問題を解いて解説してください。" },
+        ],
+      };
     }
-  }
 
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 2048,
-    system: systemPrompt,
-    messages: formattedMessages,
-    stream: true,
+    return {
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    };
+  });
+
+  const response = await ai.models.generateContentStream({
+    model: "gemini-2.5-flash-preview-05-20",
+    contents,
+    config: {
+      systemInstruction,
+      tools: [{ googleSearch: {} }],
+    },
   });
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
       for await (const chunk of response) {
-        if (
-          chunk.type === "content_block_delta" &&
-          chunk.delta.type === "text_delta"
-        ) {
-          controller.enqueue(encoder.encode(chunk.delta.text));
-        }
+        const text = chunk.text;
+        if (text) controller.enqueue(encoder.encode(text));
       }
       controller.close();
     },

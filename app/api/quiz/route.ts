@@ -1,7 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import { getLawById } from "@/lib/laws";
 
-const client = new Anthropic();
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 export async function POST(req: Request) {
   const { lawId, difficulty = "medium" } = await req.json();
@@ -16,25 +16,26 @@ export async function POST(req: Request) {
   };
 
   const prompt = `${lawName}に関する${difficultyMap[difficulty]}の一問一答問題を1問作成してください。
+最新の判例や法改正も考慮した出題にしてください。
 
-以下のJSON形式で返答してください：
+以下のJSON形式のみで返答してください（説明不要）：
 {
   "question": "問題文",
   "options": ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
   "correct": 0,
   "explanation": "解説（条文・判例を引用した詳しい解説）",
   "article": "関連条文（例：民法第709条）"
-}
+}`;
 
-correctは正解の選択肢のインデックス（0〜3）です。必ずJSONのみを返してください。`;
-
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash-preview-05-20",
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    config: {
+      tools: [{ googleSearch: {} }],
+    },
   });
 
-  const text = response.content[0].type === "text" ? response.content[0].text : "";
+  const text = response.text ?? "";
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     return Response.json({ error: "問題の生成に失敗しました" }, { status: 500 });
