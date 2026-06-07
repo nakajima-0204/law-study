@@ -2,58 +2,42 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getHistory, getQuizScores, getNotes, HistoryEntry, QuizScore } from "@/lib/storage";
-import { ArrowLeft, TrendingUp, BookOpen, FileText, AlertTriangle } from "lucide-react";
-
-type ScoreEntry = { lawId: string; lawName: string; score: QuizScore };
+import { getHistory, getNotes, HistoryEntry } from "@/lib/storage";
+import { ArrowLeft, BookOpen, FileText, MessageSquare, Scale, Search } from "lucide-react";
 
 export default function ProgressPage() {
   const router = useRouter();
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [scores, setScores] = useState<ScoreEntry[]>([]);
   const [noteCount, setNoteCount] = useState(0);
 
   useEffect(() => {
-    const h = getHistory();
-    setHistory(h);
+    setHistory(getHistory());
     setNoteCount(getNotes().length);
-
-    const rawScores = getQuizScores();
-    // 法律名は履歴から逆引き
-    const nameMap: Record<string, string> = {};
-    for (const e of h) nameMap[e.lawId] = e.lawName;
-
-    const entries: ScoreEntry[] = Object.entries(rawScores).map(([lawId, score]) => ({
-      lawId,
-      lawName: nameMap[lawId] ?? lawId,
-      score,
-    }));
-    entries.sort((a, b) => {
-      const ra = a.score.correct / (a.score.total || 1);
-      const rb = b.score.correct / (b.score.total || 1);
-      return ra - rb; // 正答率低い順（苦手順）
-    });
-    setScores(entries);
   }, []);
 
-  const totalQuestions = scores.reduce((n, s) => n + s.score.total, 0);
-  const totalCorrect = scores.reduce((n, s) => n + s.score.correct, 0);
-  const overallRate = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : null;
-
   const studiedLaws = new Set(history.map((h) => h.lawId)).size;
-  const recentHistory = history.slice(0, 20);
+  const chatCount = history.filter((h) => h.type === "chat").length;
+  const casesCount = history.filter((h) => h.type === "cases").length;
+  const articlesCount = history.filter((h) => h.type === "articles").length;
+  const recentHistory = history.slice(0, 30);
 
   const TYPE_LABEL: Record<string, string> = {
     chat: "AI解説",
-    quiz: "問題演習",
     cases: "判例・事例",
     articles: "条文検索",
     notes: "メモ",
   };
 
+  const TYPE_ICON: Record<string, typeof MessageSquare> = {
+    chat: MessageSquare,
+    cases: Scale,
+    articles: Search,
+    notes: FileText,
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 p-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6 pt-14">
         <div className="flex items-center gap-3">
           <button onClick={() => router.push("/")} className="text-slate-400 hover:text-white">
             <ArrowLeft className="w-5 h-5" />
@@ -61,13 +45,13 @@ export default function ProgressPage() {
           <h1 className="text-white font-bold text-xl">学習進捗</h1>
         </div>
 
-        {/* サマリーカード */}
+        {/* サマリー */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { label: "学習した法律", value: `${studiedLaws}件`, icon: BookOpen, color: "text-amber-400" },
-            { label: "解いた問題", value: `${totalQuestions}問`, icon: TrendingUp, color: "text-blue-400" },
-            { label: "総合正答率", value: overallRate !== null ? `${overallRate}%` : "—", icon: TrendingUp, color: "text-green-400" },
-            { label: "メモ数", value: `${noteCount}件`, icon: FileText, color: "text-purple-400" },
+            { label: "AI解説", value: `${chatCount}回`, icon: MessageSquare, color: "text-blue-400" },
+            { label: "判例検索", value: `${casesCount}回`, icon: Scale, color: "text-purple-400" },
+            { label: "メモ", value: `${noteCount}件`, icon: FileText, color: "text-green-400" },
           ].map((item) => (
             <div key={item.label} className="bg-slate-800 border border-slate-700 rounded-xl p-4">
               <p className="text-slate-400 text-xs mb-1">{item.label}</p>
@@ -76,63 +60,33 @@ export default function ProgressPage() {
           ))}
         </div>
 
-        {/* 苦手分野 */}
-        {scores.length > 0 && (
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
-              <h2 className="text-white font-semibold text-sm">法律別スコア（正答率低い順）</h2>
-            </div>
-            <div className="space-y-2">
-              {scores.map((s) => {
-                const rate = Math.round((s.score.correct / s.score.total) * 100);
-                const barColor = rate < 50 ? "bg-red-500" : rate < 70 ? "bg-amber-500" : "bg-green-500";
-                return (
-                  <div key={s.lawId} className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <button
-                        onClick={() => router.push(`/study/${s.lawId}`)}
-                        className="text-sm text-slate-300 hover:text-amber-400 transition-colors text-left"
-                      >
-                        {s.lawName}
-                      </button>
-                      <span className="text-xs text-slate-400">
-                        {s.score.correct}/{s.score.total}問 ({rate}%)
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-700 rounded-full h-1.5">
-                      <div className={`${barColor} h-1.5 rounded-full transition-all`} style={{ width: `${rate}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* 学習履歴 */}
+        {/* 最近の学習 */}
         {recentHistory.length > 0 && (
           <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-3">
             <h2 className="text-white font-semibold text-sm">最近の学習</h2>
             <div className="space-y-2">
-              {recentHistory.map((h) => (
-                <div key={h.id} className="flex items-center justify-between py-1">
-                  <div>
-                    <button
-                      onClick={() => router.push(`/study/${h.lawId}`)}
-                      className="text-sm text-slate-300 hover:text-amber-400 transition-colors"
-                    >
-                      {h.lawName}
-                    </button>
-                    <span className="ml-2 text-xs bg-slate-700 text-slate-400 px-2 py-0.5 rounded-full">
-                      {TYPE_LABEL[h.type]}
+              {recentHistory.map((h) => {
+                const Icon = TYPE_ICON[h.type] ?? MessageSquare;
+                return (
+                  <div key={h.id} className="flex items-center justify-between py-1">
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                      <button
+                        onClick={() => router.push(`/study/${h.lawId}`)}
+                        className="text-sm text-slate-300 hover:text-amber-400 transition-colors"
+                      >
+                        {h.lawName}
+                      </button>
+                      <span className="text-xs bg-slate-700 text-slate-400 px-2 py-0.5 rounded-full">
+                        {TYPE_LABEL[h.type] ?? h.type}
+                      </span>
+                    </div>
+                    <span className="text-xs text-slate-500">
+                      {new Date(h.date).toLocaleDateString("ja-JP")}
                     </span>
                   </div>
-                  <span className="text-xs text-slate-500">
-                    {new Date(h.date).toLocaleDateString("ja-JP")}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

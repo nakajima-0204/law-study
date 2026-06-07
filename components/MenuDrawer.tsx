@@ -5,14 +5,13 @@ import { useRouter, usePathname } from "next/navigation";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { getFontSize, setFontSize, FontSize } from "@/lib/storage";
 import {
-  Menu, X, Home, TrendingUp, GraduationCap, Type, BookOpen,
+  Menu, X, Home, TrendingUp, Type, BookOpen,
   ChevronRight, Zap, LogOut, LogIn, Crown,
 } from "lucide-react";
 
 const NAV = [
   { href: "/", label: "ホーム", icon: Home },
   { href: "/progress", label: "学習進捗", icon: TrendingUp },
-  { href: "/exam", label: "模擬試験", icon: GraduationCap },
   { href: "/pricing", label: "料金プラン", icon: Zap },
 ];
 

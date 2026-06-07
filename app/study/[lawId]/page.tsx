@@ -5,11 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { getLawById, AutoLaw } from "@/lib/laws";
 import autoLawsData from "@/data/auto-laws.json";
 import ChatPanel from "@/components/ChatPanel";
-import QuizPanel from "@/components/QuizPanel";
 import CasesPanel from "@/components/CasesPanel";
 import NotesPanel from "@/components/NotesPanel";
 import ArticleSearchPanel from "@/components/ArticleSearchPanel";
-import { ArrowLeft, MessageSquare, Brain, Scale, FileText, BookOpen } from "lucide-react";
+import { ArrowLeft, MessageSquare, Scale, FileText, BookOpen } from "lucide-react";
 
 const autoLaws = autoLawsData as AutoLaw[];
 
@@ -17,7 +16,6 @@ const TABS = [
   { id: "chat", label: "AI解説", icon: MessageSquare },
   { id: "cases", label: "判例", icon: Scale },
   { id: "articles", label: "条文", icon: BookOpen },
-  { id: "quiz", label: "演習", icon: Brain },
   { id: "notes", label: "メモ", icon: FileText },
 ];
 
@@ -32,7 +30,6 @@ export default function StudyPage() {
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col">
       <header className="bg-slate-800 border-b border-slate-700 px-3 py-2 flex items-center gap-2">
-        {/* ハンバーガーの幅分スペース */}
         <div className="w-10 flex-shrink-0" />
         <h1 className="text-white font-semibold flex-1 text-sm truncate min-w-0 text-center">
           {law.name}
@@ -45,7 +42,6 @@ export default function StudyPage() {
         </button>
       </header>
 
-      {/* タブバー（横スクロール） */}
       <div className="bg-slate-800 border-b border-slate-700 flex overflow-x-auto scrollbar-none">
         {TABS.map((t) => {
           const Icon = t.icon;
@@ -72,7 +68,6 @@ export default function StudyPage() {
         {tab === "articles" && (
           <ArticleSearchPanel lawId={lawId} lawName={law.name} egov_id={law.egov_id} />
         )}
-        {tab === "quiz" && <QuizPanel lawId={lawId} lawName={law.name} />}
         {tab === "notes" && <NotesPanel lawId={lawId} lawName={law.name} />}
       </main>
     </div>
