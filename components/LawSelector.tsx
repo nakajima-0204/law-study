@@ -16,7 +16,7 @@ const DOMAIN_ICONS: Record<string, string> = {
   international: "🌏",
   digital: "💻",
   "human-rights": "🕊️",
-  exam: "📝",
+  "current-topics": "📰",
 };
 
 type Props = {
