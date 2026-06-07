@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getLawById } from "@/lib/laws";
+import { getLawById, AutoLaw } from "@/lib/laws";
+import autoLawsData from "@/data/auto-laws.json";
+
+const autoLaws = autoLawsData as AutoLaw[];
 import ChatPanel from "@/components/ChatPanel";
 import QuizPanel from "@/components/QuizPanel";
 import CasesPanel from "@/components/CasesPanel";
@@ -19,7 +22,7 @@ export default function StudyPage() {
   const router = useRouter();
   const [tab, setTab] = useState("chat");
 
-  const law = getLawById(lawId);
+  const law = getLawById(lawId, autoLaws);
   if (!law) return <p className="text-white p-8">法律が見つかりません</p>;
 
   return (

@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { LAW_DOMAINS, LawDomain } from "@/lib/laws";
-import { BookOpen, ArrowLeft, ChevronRight } from "lucide-react";
+import { LAW_DOMAINS, LawDomain, AutoLaw } from "@/lib/laws";
+import autoLawsData from "@/data/auto-laws.json";
+import { BookOpen, ArrowLeft, ChevronRight, Sparkles } from "lucide-react";
+
+const autoLaws = autoLawsData as AutoLaw[];
 
 type Props = {
   onSelect: (lawId: string) => void;
@@ -12,6 +15,9 @@ export default function LawSelector({ onSelect }: Props) {
   const [selectedDomain, setSelectedDomain] = useState<LawDomain | null>(null);
 
   if (selectedDomain) {
+    // この domain に属する自動追加法律
+    const domainAutoLaws = autoLaws.filter((l) => l.domain === selectedDomain.id);
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6">
         <div className="max-w-4xl mx-auto">
@@ -47,6 +53,28 @@ export default function LawSelector({ onSelect }: Props) {
                       <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-amber-400 flex-shrink-0 mt-0.5 transition-colors" />
                     </button>
                   ))}
+
+                  {/* この category に属する自動追加法律 */}
+                  {domainAutoLaws
+                    .filter((l) => l.category === cat.id)
+                    .map((law) => (
+                      <button
+                        key={law.id}
+                        onClick={() => onSelect(law.id)}
+                        className="bg-slate-800 hover:bg-slate-700 border border-emerald-800/50 hover:border-emerald-500 text-white rounded-xl p-3.5 text-left transition-all group flex items-start justify-between gap-2"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1 mb-1">
+                            <Sparkles className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                            <span className="text-xs text-emerald-400">{law.addedAt} 追加</span>
+                          </div>
+                          <span className="text-sm font-medium group-hover:text-emerald-300 transition-colors leading-snug">
+                            {law.name}
+                          </span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-emerald-400 flex-shrink-0 mt-4 transition-colors" />
+                      </button>
+                    ))}
                 </div>
               </div>
             ))}
@@ -65,11 +93,18 @@ export default function LawSelector({ onSelect }: Props) {
             <h1 className="text-4xl font-bold text-white">LexAI</h1>
           </div>
           <p className="text-slate-400">学びたい法分野を選んでください</p>
+          {autoLaws.length > 0 && (
+            <p className="text-emerald-400 text-xs mt-2 flex items-center justify-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              {autoLaws.length}件の法律が自動追加されています
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {LAW_DOMAINS.map((domain) => {
             const totalLaws = domain.categories.reduce((n, c) => n + c.laws.length, 0);
+            const autoCount = autoLaws.filter((l) => l.domain === domain.id).length;
             return (
               <button
                 key={domain.id}
@@ -88,13 +123,19 @@ export default function LawSelector({ onSelect }: Props) {
                 <p className="text-slate-400 text-sm leading-relaxed mb-3">
                   {domain.description}
                 </p>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs bg-black/20 text-slate-300 px-2 py-1 rounded-full">
                     {domain.categories.length} カテゴリ
                   </span>
                   <span className="text-xs bg-black/20 text-slate-300 px-2 py-1 rounded-full">
                     {totalLaws} 法律
                   </span>
+                  {autoCount > 0 && (
+                    <span className="text-xs bg-emerald-900/40 text-emerald-400 px-2 py-1 rounded-full flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5" />
+                      +{autoCount} 新着
+                    </span>
+                  )}
                 </div>
               </button>
             );

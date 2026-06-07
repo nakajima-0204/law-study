@@ -537,13 +537,20 @@ export const LAW_DOMAINS: LawDomain[] = [
   },
 ];
 
-export function getLawById(id: string): Law | undefined {
+export type AutoLaw = Law & {
+  domain: string;
+  category: string;
+  addedAt: string;
+};
+
+export function getLawById(id: string, autoLaws: AutoLaw[] = []): Law | undefined {
   for (const domain of LAW_DOMAINS) {
     for (const cat of domain.categories) {
       const law = cat.laws.find((l) => l.id === id);
       if (law) return law;
     }
   }
+  return autoLaws.find((l) => l.id === id);
 }
 
 export function getDomainByLawId(lawId: string): LawDomain | undefined {

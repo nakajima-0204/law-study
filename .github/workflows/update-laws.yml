@@ -1,0 +1,39 @@
+name: 法令自動更新
+
+on:
+  schedule:
+    - cron: "0 2 * * 1" # 毎週月曜 午前2時（JST 11時）
+  workflow_dispatch: # 手動実行も可能
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 依存関係インストール
+        run: npm ci
+
+      - name: 新法律を取得・分類
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/update-laws.mjs
+
+      - name: 変更があればコミット・プッシュ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/auto-laws.json
+          if git diff --staged --quiet; then
+            echo "変更なし"
+          else
+            git commit -m "auto: 新法律を追加 $(date +'%Y-%m-%d')"
+            git push
+          fi
