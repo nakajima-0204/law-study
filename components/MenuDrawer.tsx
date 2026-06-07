@@ -74,7 +74,10 @@ export default function MenuDrawer() {
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-amber-400" />
-            <span className="text-white font-bold text-lg">LexAI</span>
+            <div>
+              <span className="text-white font-bold text-lg">Themisia</span>
+              <span className="text-amber-400/70 text-xs ml-1">テミシア</span>
+            </div>
           </div>
           <button
             onClick={() => setOpen(false)}

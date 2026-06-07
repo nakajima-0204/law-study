@@ -90,7 +90,8 @@ export default function LawSelector({ onSelect }: Props) {
         <div className="text-center mb-10 pt-10">
           <div className="flex items-center justify-center gap-3 mb-3">
             <BookOpen className="w-10 h-10 text-amber-400" />
-            <h1 className="text-4xl font-bold text-white">LexAI</h1>
+            <h1 className="text-4xl font-bold text-white">Themisia</h1>
+            <p className="text-amber-400/60 text-sm -mt-1">テミシア</p>
           </div>
           <p className="text-slate-400">学びたい法分野を選んでください</p>
           {autoLaws.length > 0 && (

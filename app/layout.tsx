@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LexAI - AI法学学習",
-  description: "AIと一緒に法学を学ぶアプリ",
+  title: "Themisia（テミシア）- AI法学学習",
+  description: "AIと一緒に法学を学ぶアプリ Themisia（テミシア）",
 };
 
 export default function RootLayout({
