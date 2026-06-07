@@ -1,9 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 import { getLawById } from "@/lib/laws";
+import { checkLimit } from "@/lib/limits";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 export async function POST(req: Request) {
+  const check = await checkLimit("quiz");
+  if (!check.allowed) {
+    return Response.json({ error: check.reason }, { status: 401 });
+  }
+
   const { lawId, difficulty = "medium" } = await req.json();
 
   const law = getLawById(lawId);
