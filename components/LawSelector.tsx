@@ -19,7 +19,7 @@ export default function LawSelector({ onSelect }: Props) {
     const domainAutoLaws = autoLaws.filter((l) => l.domain === selectedDomain.id);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6 pb-24">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6 pb-8">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => setSelectedDomain(null)}
@@ -85,9 +85,9 @@ export default function LawSelector({ onSelect }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6 pb-8">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-10">
+        <div className="text-center mb-10 pt-10">
           <div className="flex items-center justify-center gap-3 mb-3">
             <BookOpen className="w-10 h-10 text-amber-400" />
             <h1 className="text-4xl font-bold text-white">LexAI</h1>

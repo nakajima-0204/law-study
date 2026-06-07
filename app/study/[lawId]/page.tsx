@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getLawById, AutoLaw } from "@/lib/laws";
 import autoLawsData from "@/data/auto-laws.json";
@@ -9,8 +9,7 @@ import QuizPanel from "@/components/QuizPanel";
 import CasesPanel from "@/components/CasesPanel";
 import NotesPanel from "@/components/NotesPanel";
 import ArticleSearchPanel from "@/components/ArticleSearchPanel";
-import { getFontSize, setFontSize, FontSize } from "@/lib/storage";
-import { ArrowLeft, MessageSquare, Brain, Scale, FileText, BookOpen, Type } from "lucide-react";
+import { ArrowLeft, MessageSquare, Brain, Scale, FileText, BookOpen } from "lucide-react";
 
 const autoLaws = autoLawsData as AutoLaw[];
 
@@ -22,28 +21,10 @@ const TABS = [
   { id: "notes", label: "メモ", icon: FileText },
 ];
 
-const FONT_SIZES: FontSize[] = ["sm", "md", "lg"];
-const FONT_LABELS: Record<FontSize, string> = { sm: "小", md: "中", lg: "大" };
-const FONT_BASE: Record<FontSize, string> = { sm: "14px", md: "16px", lg: "18px" };
-
 export default function StudyPage() {
   const { lawId } = useParams<{ lawId: string }>();
   const router = useRouter();
   const [tab, setTab] = useState("chat");
-  const [fontSize, setFs] = useState<FontSize>("md");
-
-  useEffect(() => {
-    const saved = getFontSize();
-    setFs(saved);
-    document.documentElement.style.fontSize = FONT_BASE[saved];
-  }, []);
-
-  function cycleFontSize() {
-    const next = FONT_SIZES[(FONT_SIZES.indexOf(fontSize) + 1) % FONT_SIZES.length];
-    setFs(next);
-    setFontSize(next);
-    document.documentElement.style.fontSize = FONT_BASE[next];
-  }
 
   const law = getLawById(lawId, autoLaws);
   if (!law) return <p className="text-white p-8">法律が見つかりません</p>;
@@ -51,20 +32,16 @@ export default function StudyPage() {
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col">
       <header className="bg-slate-800 border-b border-slate-700 px-3 py-2 flex items-center gap-2">
+        {/* ハンバーガーの幅分スペース */}
+        <div className="w-10 flex-shrink-0" />
+        <h1 className="text-white font-semibold flex-1 text-sm truncate min-w-0 text-center">
+          {law.name}
+        </h1>
         <button
-          onClick={() => router.push("/")}
-          className="text-slate-400 hover:text-white transition-colors flex-shrink-0 p-1"
+          onClick={() => router.back()}
+          className="text-slate-400 hover:text-white transition-colors flex-shrink-0 w-10 flex items-center justify-end"
         >
           <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-white font-semibold flex-1 text-sm truncate min-w-0">{law.name}</h1>
-        <button
-          onClick={cycleFontSize}
-          className="text-slate-400 hover:text-white p-1 flex-shrink-0 flex items-center gap-0.5"
-          title="フォントサイズ"
-        >
-          <Type className="w-4 h-4" />
-          <span className="text-xs">{FONT_LABELS[fontSize]}</span>
         </button>
       </header>
 
