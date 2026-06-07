@@ -510,31 +510,6 @@ export const LAW_DOMAINS: LawDomain[] = [
       },
     ],
   },
-  {
-    id: "exam",
-    name: "試験対策",
-    nameEn: "Exam Prep",
-    description: "各種法律資格試験の対策",
-    color: "from-slate-700/60 to-slate-600/40 border-slate-600/50 hover:border-slate-400",
-    categories: [
-      {
-        id: "exam-general",
-        name: "資格試験",
-        laws: [
-          { id: "shoshi", name: "司法書士試験" },
-          { id: "gyosei-shoshi", name: "行政書士試験" },
-          { id: "shiho-yobi", name: "司法試験・予備試験" },
-          { id: "shiho-shoshi-kirokuki", name: "司法書士（記述式対策）" },
-          { id: "takken", name: "宅地建物取引士試験" },
-          { id: "shakkin-sodan", name: "貸金業務取扱主任者試験" },
-          { id: "fukan-shiken", name: "法科大学院入試（法律科目）" },
-          { id: "koumuin-shiken", name: "公務員試験（法律科目）" },
-          { id: "kantei", name: "不動産鑑定士試験" },
-          { id: "sharoushi", name: "社会保険労務士試験" },
-        ],
-      },
-    ],
-  },
 ];
 
 export type AutoLaw = Law & {
