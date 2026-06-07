@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
   const articles = await articlesPromise;
   const lawContext = articles.length > 0
-    ? `\n\n━━ e-Gov公式条文（https://laws.e-gov.go.jp）━━\n${articlesToContext(articles, 6000)}`
+    ? `\n\n━━ e-Gov公式条文（https://laws.e-gov.go.jp）━━\n${articlesToContext(articles, 3000)}`
     : "";
 
   const systemInstruction = `あなたは${lawName}を専門とする法学の第一人者であり、優れた教育者です。
@@ -104,8 +104,7 @@ ${lawContext}`;
     contents,
     config: {
       systemInstruction,
-      tools: [{ googleSearch: {} }],
-      thinkingConfig: { thinkingBudget: 1024 },
+      thinkingConfig: { thinkingBudget: 0 },
     },
   });
 
