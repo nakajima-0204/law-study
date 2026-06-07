@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { getLawById } from "@/lib/laws";
+import { fetchLawArticles, articlesToContext } from "@/lib/egov";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
@@ -9,12 +10,30 @@ export async function POST(req: Request) {
   const law = getLawById(lawId);
   const lawName = law?.name ?? "法律全般";
 
-  const systemInstruction = `あなたは${lawName}の専門家です。
-ユーザーの質問に対して、正確でわかりやすい解説を日本語で行ってください。
-- 条文番号を引用して説明してください
-- 重要な判例があれば最新のものを優先して言及してください
-- 難しい法律用語は噛み砕いて説明してください
-- Google検索で得た最新の法改正・判例情報を積極的に活用してください`;
+  // e-Gov から条文テキストを取得してコンテキストに注入
+  let lawContext = "";
+  if (law?.egov_id) {
+    const articles = await fetchLawArticles(law.egov_id);
+    if (articles.length > 0) {
+      lawContext = `\n\n【e-Gov公式条文（https://laws.e-gov.go.jp）より取得】\n${articlesToContext(articles)}`;
+    }
+  }
+
+  const systemInstruction = `あなたは${lawName}の専門家です。以下の原則で回答してください。
+
+【情報源の優先順位】
+1. e-Gov法令データベース（https://laws.e-gov.go.jp）の公式条文テキスト（以下に提供）
+2. 最高裁判所判例集（https://www.courts.go.jp/app/hanrei_jp/search1）の判例
+3. 法務省・各省庁の公式通知・解釈
+4. Google検索で取得した最新情報（法改正・新判例）
+
+【回答ルール】
+- 条文を引用する際は「第○条第○項」と正確に番号を明記する
+- 判例を引用する際は「最判（最大判）〇年〇月〇日、民集〇巻〇号〇頁」の形式で表記する
+- 推測・不確かな情報は「〜と解されています」「〜の見解があります」と明示する
+- 最新の法改正があれば必ず言及する
+- 難しい法律用語は括弧内に平易な説明を加える
+${lawContext}`;
 
   const contents = messages.map((m: { role: string; content: string }, i: number) => {
     const isLast = i === messages.length - 1;

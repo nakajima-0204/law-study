@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Search, BookMarked, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Search, BookMarked, Clock, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 
 type Case = {
   title: string;
@@ -11,6 +11,8 @@ type Case = {
   holding: string;
   significance: string;
   citation: string;
+  article?: string;
+  source?: string;
 };
 
 type Props = {
@@ -133,6 +135,11 @@ export default function CasesPanel({ lawId }: Props) {
                           {c.citation}
                         </span>
                       )}
+                      {c.article && (
+                        <span className="text-xs bg-blue-900/40 text-blue-400 px-2 py-0.5 rounded-full">
+                          {c.article}
+                        </span>
+                      )}
                     </div>
                     <h3 className="text-white font-medium text-sm">{c.title}</h3>
                     <p className="text-slate-400 text-xs mt-1 line-clamp-2">{c.summary}</p>
@@ -155,6 +162,17 @@ export default function CasesPanel({ lawId }: Props) {
                     <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">重要性・実務影響</span>
                     <p className="text-slate-300 text-sm mt-1 leading-relaxed">{c.significance}</p>
                   </div>
+                  {c.source && (
+                    <a
+                      href={c.source}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-slate-500 hover:text-amber-400 transition-colors"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      出典: {c.source}
+                    </a>
+                  )}
                 </div>
               )}
             </div>
