@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
+import { saveQuizScore, addHistory } from "@/lib/storage";
 
 type Question = {
   question: string;
@@ -13,6 +14,7 @@ type Question = {
 
 type Props = {
   lawId: string;
+  lawName: string;
 };
 
 const DIFFICULTIES = [
@@ -21,7 +23,7 @@ const DIFFICULTIES = [
   { value: "hard", label: "上級" },
 ];
 
-export default function QuizPanel({ lawId }: Props) {
+export default function QuizPanel({ lawId, lawName }: Props) {
   const [question, setQuestion] = useState<Question | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,6 +34,7 @@ export default function QuizPanel({ lawId }: Props) {
     setLoading(true);
     setSelected(null);
     setQuestion(null);
+    addHistory({ lawId, lawName, type: "quiz" });
     const res = await fetch("/api/quiz", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -43,23 +46,22 @@ export default function QuizPanel({ lawId }: Props) {
   }
 
   function answer(idx: number) {
-    if (selected !== null) return;
+    if (selected !== null || !question) return;
+    const isCorrect = idx === question.correct;
     setSelected(idx);
-    setScore((s) => ({
-      correct: s.correct + (idx === question!.correct ? 1 : 0),
-      total: s.total + 1,
-    }));
+    setScore((s) => ({ correct: s.correct + (isCorrect ? 1 : 0), total: s.total + 1 }));
+    saveQuizScore(lawId, isCorrect ? 1 : 0, 1);
   }
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex gap-2">
           {DIFFICULTIES.map((d) => (
             <button
               key={d.value}
               onClick={() => setDifficulty(d.value)}
-              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors min-h-[40px] ${
                 difficulty === d.value
                   ? "bg-amber-500 text-white"
                   : "bg-slate-800 text-slate-400 hover:text-white"
@@ -70,7 +72,7 @@ export default function QuizPanel({ lawId }: Props) {
           ))}
         </div>
         <span className="text-slate-400 text-sm">
-          {score.total > 0 && `${score.correct} / ${score.total} 正解`}
+          {score.total > 0 && `${score.correct} / ${score.total} 正解（${Math.round((score.correct / score.total) * 100)}%）`}
         </span>
       </div>
 
@@ -79,7 +81,7 @@ export default function QuizPanel({ lawId }: Props) {
           <p className="text-slate-400 mb-6">AIが問題を生成します</p>
           <button
             onClick={fetchQuestion}
-            className="bg-amber-500 hover:bg-amber-400 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+            className="bg-amber-500 hover:bg-amber-400 text-white px-8 py-4 rounded-xl font-medium transition-colors text-base min-h-[52px]"
           >
             問題を出す
           </button>
@@ -112,7 +114,7 @@ export default function QuizPanel({ lawId }: Props) {
                 <button
                   key={i}
                   onClick={() => answer(i)}
-                  className={`w-full text-left border rounded-xl p-3 text-sm transition-all ${style}`}
+                  className={`w-full text-left border rounded-xl p-4 text-sm transition-all min-h-[52px] ${style}`}
                 >
                   <span className="font-bold mr-2">{["A", "B", "C", "D"][i]}.</span>
                   {opt}
@@ -136,7 +138,7 @@ export default function QuizPanel({ lawId }: Props) {
               <p className="text-slate-300 text-sm leading-relaxed">{question.explanation}</p>
               <button
                 onClick={fetchQuestion}
-                className="flex items-center gap-2 text-amber-400 hover:text-amber-300 text-sm mt-2"
+                className="flex items-center gap-2 text-amber-400 hover:text-amber-300 text-sm mt-2 min-h-[40px]"
               >
                 <RefreshCw className="w-4 h-4" /> 次の問題
               </button>

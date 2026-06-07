@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, Camera, Loader2 } from "lucide-react";
+import { addHistory } from "@/lib/storage";
 
 type Message = {
   id: string;
@@ -33,6 +34,7 @@ export default function ChatPanel({ lawId, lawName }: Props) {
 
   async function send(text: string, imageBase64?: string) {
     if (!text.trim() && !imageBase64) return;
+    addHistory({ lawId, lawName, type: "chat" });
 
     const userMsg: Message = {
       id: Date.now().toString(),
