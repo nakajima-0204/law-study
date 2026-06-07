@@ -5,6 +5,7 @@ import { LAW_DOMAINS, LawDomain, AutoLaw } from "@/lib/laws";
 import autoLawsData from "@/data/auto-laws.json";
 import { BookOpen, ArrowLeft, ChevronRight, Sparkles, Scale } from "lucide-react";
 import LawSearch from "@/components/LawSearch";
+import HomeConsult from "@/components/HomeConsult";
 
 const autoLaws = autoLawsData as AutoLaw[];
 
@@ -113,8 +114,13 @@ export default function LawSelector({ onSelect }: Props) {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 pb-8">
+        {/* AI相談 */}
+        <div className="mb-3 -mt-4 relative z-10">
+          <HomeConsult />
+        </div>
+
         {/* 検索バー */}
-        <div className="mb-6 -mt-4 relative z-10">
+        <div className="mb-6 relative z-10">
           <LawSearch />
         </div>
 
