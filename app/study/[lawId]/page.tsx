@@ -5,10 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { getLawById } from "@/lib/laws";
 import ChatPanel from "@/components/ChatPanel";
 import QuizPanel from "@/components/QuizPanel";
-import { ArrowLeft, MessageSquare, Brain } from "lucide-react";
+import CasesPanel from "@/components/CasesPanel";
+import { ArrowLeft, MessageSquare, Brain, Scale } from "lucide-react";
 
 const TABS = [
   { id: "chat", label: "AI解説", icon: MessageSquare },
+  { id: "cases", label: "判例・事例", icon: Scale },
   { id: "quiz", label: "問題演習", icon: Brain },
 ];
 
@@ -22,14 +24,14 @@ export default function StudyPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col">
-      <header className="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center gap-3">
+      <header className="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center gap-2">
         <button
           onClick={() => router.push("/")}
-          className="text-slate-400 hover:text-white transition-colors"
+          className="text-slate-400 hover:text-white transition-colors mr-1"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-white font-semibold flex-1">{law.name}</h1>
+        <h1 className="text-white font-semibold flex-1 text-sm truncate">{law.name}</h1>
         <div className="flex gap-1">
           {TABS.map((t) => {
             const Icon = t.icon;
@@ -37,13 +39,13 @@ export default function StudyPage() {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   tab === t.id
                     ? "bg-amber-500 text-white"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3.5 h-3.5" />
                 {t.label}
               </button>
             );
@@ -51,8 +53,9 @@ export default function StudyPage() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-y-auto">
         {tab === "chat" && <ChatPanel lawId={lawId} lawName={law.name} />}
+        {tab === "cases" && <CasesPanel lawId={lawId} />}
         {tab === "quiz" && <QuizPanel lawId={lawId} />}
       </main>
     </div>
