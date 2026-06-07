@@ -63,13 +63,23 @@ export default function StudyPage() {
         })}
       </div>
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-hidden">
         {tab === "chat" && <ChatPanel lawId={lawId} lawName={law.name} />}
-        {tab === "cases" && <CasesPanel lawId={lawId} />}
-        {tab === "articles" && (
-          <ArticleSearchPanel lawId={lawId} lawName={law.name} egov_id={law.egov_id} />
+        {tab === "cases" && (
+          <div className="h-[calc(100vh-108px)] overflow-y-auto">
+            <CasesPanel lawId={lawId} />
+          </div>
         )}
-        {tab === "notes" && <NotesPanel lawId={lawId} lawName={law.name} />}
+        {tab === "articles" && (
+          <div className="h-[calc(100vh-108px)] overflow-y-auto">
+            <ArticleSearchPanel lawId={lawId} lawName={law.name} egov_id={law.egov_id} />
+          </div>
+        )}
+        {tab === "notes" && (
+          <div className="h-[calc(100vh-108px)] overflow-y-auto">
+            <NotesPanel lawId={lawId} lawName={law.name} />
+          </div>
+        )}
       </main>
     </div>
   );
