@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getLawById, AutoLaw } from "@/lib/laws";
 import autoLawsData from "@/data/auto-laws.json";
 import ChatPanel from "@/components/ChatPanel";
@@ -22,7 +22,8 @@ const TABS = [
 export default function StudyPage() {
   const { lawId } = useParams<{ lawId: string }>();
   const router = useRouter();
-  const [tab, setTab] = useState("chat");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState(searchParams.get("tab") ?? "chat");
 
   const law = getLawById(lawId, autoLaws);
   if (!law) return <p className="text-white p-8">法律が見つかりません</p>;

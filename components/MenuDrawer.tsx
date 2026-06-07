@@ -11,7 +11,7 @@ import {
 
 const NAV = [
   { href: "/", label: "ホーム", icon: Home },
-  { href: "/progress", label: "学習進捗", icon: TrendingUp },
+  { href: "/progress", label: "履歴", icon: TrendingUp },
   { href: "/pricing", label: "料金プラン", icon: Zap },
 ];
 
