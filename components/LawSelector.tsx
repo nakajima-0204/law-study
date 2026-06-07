@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LAW_DOMAINS, LawDomain, AutoLaw } from "@/lib/laws";
 import autoLawsData from "@/data/auto-laws.json";
 import { BookOpen, ArrowLeft, ChevronRight, Sparkles } from "lucide-react";
+import LawSearch from "@/components/LawSearch";
 
 const autoLaws = autoLawsData as AutoLaw[];
 
@@ -87,7 +88,11 @@ export default function LawSelector({ onSelect }: Props) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6 pb-8">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-10 pt-10">
+        <div className="mb-6 pt-10">
+          <LawSearch />
+        </div>
+
+        <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-3 mb-3">
             <BookOpen className="w-10 h-10 text-amber-400" />
             <h1 className="text-4xl font-bold text-white">Themisia</h1>
