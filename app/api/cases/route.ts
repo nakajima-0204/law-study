@@ -94,6 +94,7 @@ JSONのみを返してください。前後に説明を入れないこと。`;
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     config: {
       tools: [{ googleSearch: {} }],
+      thinkingConfig: { thinkingBudget: 512 },
     },
   });
 

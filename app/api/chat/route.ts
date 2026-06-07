@@ -16,13 +16,15 @@ export async function POST(req: Request) {
   const law = getLawById(lawId);
   const lawName = law?.name ?? "法律全般";
 
-  let lawContext = "";
-  if (law?.egov_id) {
-    const articles = await fetchLawArticles(law.egov_id);
-    if (articles.length > 0) {
-      lawContext = `\n\n━━ e-Gov公式条文（https://laws.e-gov.go.jp）━━\n${articlesToContext(articles)}`;
-    }
-  }
+  // e-Gov フェッチを非同期で開始（並列処理）
+  const articlesPromise = law?.egov_id
+    ? fetchLawArticles(law.egov_id)
+    : Promise.resolve([]);
+
+  const articles = await articlesPromise;
+  const lawContext = articles.length > 0
+    ? `\n\n━━ e-Gov公式条文（https://laws.e-gov.go.jp）━━\n${articlesToContext(articles, 6000)}`
+    : "";
 
   const systemInstruction = `あなたは${lawName}を専門とする法学の第一人者であり、優れた教育者です。
 東京大学法学部教授レベルの専門知識を持ちながら、誰にでもわかりやすく教えることができます。
@@ -103,6 +105,7 @@ ${lawContext}`;
     config: {
       systemInstruction,
       tools: [{ googleSearch: {} }],
+      thinkingConfig: { thinkingBudget: 1024 },
     },
   });
 
