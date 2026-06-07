@@ -26,14 +26,22 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: node scripts/update-laws.mjs
 
+      - name: 全条文をプリフェッチ
+        run: node scripts/prefetch-articles.mjs
+
+      - name: 重要判例をプリジェネレート（未生成のみ）
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/prefetch-cases.mjs
+
       - name: 変更があればコミット・プッシュ
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/auto-laws.json
+          git add data/
           if git diff --staged --quiet; then
             echo "変更なし"
           else
-            git commit -m "auto: 新法律を追加 $(date +'%Y-%m-%d')"
+            git commit -m "auto: 条文・判例データ更新 $(date +'%Y-%m-%d')"
             git push
           fi

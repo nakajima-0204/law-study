@@ -4,6 +4,7 @@ export type ArticleResult = {
   num: string;
   title: string;
   text: string;
+  paragraphs: string[];
 };
 
 export async function fetchLawArticles(lawId: string): Promise<ArticleResult[]> {
@@ -57,7 +58,7 @@ function parseArticles(xml: string): ArticleResult[] {
     }
 
     if (paragraphs.length > 0) {
-      articles.push({ num, title, text: paragraphs.join("\n") });
+      articles.push({ num, title, text: paragraphs.join("\n"), paragraphs });
     }
   }
 

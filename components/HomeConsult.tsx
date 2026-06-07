@@ -15,11 +15,11 @@ type Message = {
 };
 
 const SUGGESTIONS = [
-  "バイトで残業代が払われていない",
-  "賃貸の敷金が返ってこない",
-  "SNSで誹謗中傷された",
-  "離婚したいけど子どもの親権はどうなる？",
-  "会社を解雇されたが不当では？",
+  "正当防衛が成立するための要件は？判例はどう判断している？",
+  "SNSで誹謗中傷された場合、不法行為と名誉毀損罪はどう違う？",
+  "相続放棄しても連帯保証債務はどうなる？学説の対立は？",
+  "解雇権濫用法理について判例と学説の見解は？",
+  "占有と所有権の関係を民法でどう整理する？",
 ];
 
 export default function HomeConsult() {
@@ -92,8 +92,8 @@ export default function HomeConsult() {
           <Sparkles className="w-4 h-4 text-amber-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-amber-300 font-semibold text-sm">AIに相談して法律を選ぶ</p>
-          <p className="text-slate-500 text-xs mt-0.5">状況を話すと関連する法律を提案します</p>
+          <p className="text-amber-300 font-semibold text-sm">法律をAIに質問する</p>
+          <p className="text-slate-500 text-xs mt-0.5">事例・判例・学説について深く解説します</p>
         </div>
         <MessageSquare className="w-4 h-4 text-slate-500 group-hover:text-amber-400 transition-colors" />
       </button>
@@ -108,7 +108,7 @@ export default function HomeConsult() {
           <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <span className="text-white text-sm font-semibold">AIに相談</span>
+          <span className="text-white text-sm font-semibold">法律AI</span>
         </div>
         <button
           onClick={() => setOpen(false)}
@@ -123,7 +123,7 @@ export default function HomeConsult() {
         {messages.length === 0 && (
           <div className="space-y-3">
             <p className="text-slate-400 text-sm text-center">
-              どんなことでも気軽に話しかけてください
+              事例・判例・学説について何でも聞いてください
             </p>
             <div className="space-y-2">
               {SUGGESTIONS.map((s) => (
@@ -215,7 +215,7 @@ export default function HomeConsult() {
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
             }}
-            placeholder="状況・疑問を自由に入力…"
+            placeholder="事例・判例・学説について質問…"
             className="flex-1 bg-slate-700 border border-slate-600 rounded-xl px-3 py-2 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500"
           />
           <button

@@ -2,6 +2,17 @@ import { GoogleGenAI } from "@google/genai";
 import { GEMINI_MODEL } from "@/lib/model";
 import { getLawById } from "@/lib/laws";
 import { checkLimit } from "@/lib/limits";
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const lawId = searchParams.get("lawId");
+  if (!lawId) return Response.json([]);
+  const staticPath = join(process.cwd(), "data", "cases", `${lawId}.json`);
+  if (!existsSync(staticPath)) return Response.json([]);
+  return Response.json(JSON.parse(readFileSync(staticPath, "utf-8")));
+}
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 

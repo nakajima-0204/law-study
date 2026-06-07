@@ -1,4 +1,6 @@
 import { fetchLawArticles } from "@/lib/egov";
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -7,15 +9,20 @@ export async function GET(req: Request) {
 
   if (!egov_id) return Response.json([], { status: 400 });
 
-  const articles = await fetchLawArticles(egov_id);
+  let articles;
+  const staticPath = join(process.cwd(), "data", "articles", `${egov_id}.json`);
+  if (existsSync(staticPath)) {
+    articles = JSON.parse(readFileSync(staticPath, "utf-8"));
+  } else {
+    articles = await fetchLawArticles(egov_id);
+  }
 
   const filtered = q
     ? articles.filter(
-        (a) =>
-          a.title.toLowerCase().includes(q) ||
-          a.text.toLowerCase().includes(q)
+        (a: { title: string; text: string }) =>
+          a.title.toLowerCase().includes(q) || a.text.toLowerCase().includes(q)
       )
     : articles;
 
-  return Response.json(filtered.slice(0, 50));
+  return Response.json(q ? filtered.slice(0, 50) : filtered);
 }

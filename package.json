@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prefetch:articles": "node scripts/prefetch-articles.mjs",
+    "prefetch:cases": "node scripts/prefetch-cases.mjs",
+    "prefetch": "node scripts/prefetch-articles.mjs && node scripts/prefetch-cases.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.4.3",
