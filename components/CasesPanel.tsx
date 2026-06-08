@@ -75,30 +75,26 @@ function CaseCard({ c, expanded, onToggle }: { c: Case; expanded: boolean; onTog
 }
 
 export default function CasesPanel({ lawId }: Props) {
-  const [landmark, setLandmark] = useState<Case[]>([]);
-  const [landmarkLoading, setLandmarkLoading] = useState(true);
-  const [expandedLandmark, setExpandedLandmark] = useState<number | null>(null);
-
   const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Case[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
+  const [cases, setCases] = useState<Case[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [expandedSearch, setExpandedSearch] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [landmark, setLandmark] = useState<Case[]>([]);
 
   useEffect(() => {
-    setLandmarkLoading(true);
-    fetch(`/api/cases?lawId=${lawId}`)
+    fetch(`/api/cases?lawId=${encodeURIComponent(lawId)}`)
       .then((r) => r.json())
-      .then((data) => setLandmark(Array.isArray(data) ? data : []))
-      .finally(() => setLandmarkLoading(false));
+      .then((d) => { if (Array.isArray(d) && d.length > 0) setLandmark(d); })
+      .catch(() => {});
   }, [lawId]);
 
   async function search() {
     if (!query.trim()) return;
-    setSearchLoading(true);
+    setLoading(true);
     setSearched(true);
-    setSearchResults([]);
-    setExpandedSearch(null);
+    setCases([]);
+    setExpanded(null);
 
     const res = await fetch("/api/cases", {
       method: "POST",
@@ -106,92 +102,77 @@ export default function CasesPanel({ lawId }: Props) {
       body: JSON.stringify({ lawId, type: "search", query }),
     });
     const data = await res.json();
-    setSearchResults(Array.isArray(data) ? data : []);
-    setSearchLoading(false);
+    setCases(Array.isArray(data) ? data : []);
+    setLoading(false);
   }
 
   return (
-    <div className="p-4 space-y-6">
-      {/* 重要判例（プリジェネレート） */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Scale className="w-4 h-4 text-amber-400" />
-          <span className="text-white text-sm font-semibold">重要判例・最判</span>
-          {landmarkLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />}
-          {!landmarkLoading && landmark.length > 0 && (
-            <span className="text-xs text-slate-500">{landmark.length}件</span>
-          )}
-        </div>
-
-        {landmarkLoading && (
-          <div className="flex items-center justify-center py-10 gap-2 text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin text-amber-400" />
-            <span className="text-sm">読み込み中…</span>
-          </div>
-        )}
-
-        {!landmarkLoading && landmark.length === 0 && (
-          <p className="text-slate-500 text-sm px-1">この法律の重要判例データはまだ準備中です</p>
-        )}
-
-        {landmark.map((c, i) => (
-          <CaseCard
-            key={i}
-            c={c}
-            expanded={expandedLandmark === i}
-            onToggle={() => setExpandedLandmark(expandedLandmark === i ? null : i)}
-          />
-        ))}
+    <div className="p-4 space-y-4">
+      <div className="flex gap-2">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && search()}
+          placeholder="キーワードを入力（例：不法行為、解雇、担保）"
+          className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500"
+        />
+        <button
+          onClick={search}
+          disabled={!query.trim() || loading}
+          className="bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-white px-4 rounded-xl transition-colors active:scale-95"
+        >
+          <Search className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* 判例検索 */}
-      <div className="space-y-3">
-        <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">キーワード検索</p>
-        <div className="flex gap-2">
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && search()}
-            placeholder="キーワードを入力（例：不法行為、解雇、担保）"
-            className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500"
-          />
-          <button
-            onClick={search}
-            disabled={!query.trim() || searchLoading}
-            className="bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-white px-4 rounded-xl transition-colors active:scale-95"
-          >
-            <Search className="w-5 h-5" />
-          </button>
+      {cases.length === 0 && !loading && !searched && landmark.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-xs text-slate-500 px-1">重要判例</p>
+          {landmark.map((c, i) => (
+            <CaseCard
+              key={i}
+              c={c}
+              expanded={expanded === -(i + 1)}
+              onToggle={() => setExpanded(expanded === -(i + 1) ? null : -(i + 1))}
+            />
+          ))}
         </div>
+      )}
 
-        {searchLoading && (
-          <div className="flex items-center justify-center py-8 gap-2 text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin text-amber-400" />
-            <span className="text-sm">判例を検索中…</span>
+      {cases.length === 0 && !loading && !searched && landmark.length === 0 && (
+        <div className="text-center py-14">
+          <Scale className="w-10 h-10 text-slate-700 mx-auto mb-3" />
+          <p className="text-slate-400 text-sm">キーワードで関連判例を検索します</p>
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-14 gap-3 text-slate-400">
+          <Loader2 className="w-6 h-6 animate-spin text-amber-400" />
+          <p className="text-sm">判例を検索中…</p>
+        </div>
+      )}
+
+      {searched && !loading && cases.length === 0 && (
+        <p className="text-slate-500 text-sm text-center py-6">「{query}」に一致する判例が見つかりませんでした</p>
+      )}
+
+      {cases.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-slate-400 text-xs">{cases.length}件</span>
+            <button onClick={search} className="text-amber-400 hover:text-amber-300 text-xs">再検索</button>
           </div>
-        )}
-
-        {searched && !searchLoading && searchResults.length === 0 && (
-          <p className="text-slate-500 text-sm text-center py-6">「{query}」に一致する判例が見つかりませんでした</p>
-        )}
-
-        {searchResults.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-slate-400 text-xs">{searchResults.length}件</span>
-              <button onClick={search} className="text-amber-400 hover:text-amber-300 text-xs">再検索</button>
-            </div>
-            {searchResults.map((c, i) => (
-              <CaseCard
-                key={i}
-                c={c}
-                expanded={expandedSearch === i}
-                onToggle={() => setExpandedSearch(expandedSearch === i ? null : i)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+          {cases.map((c, i) => (
+            <CaseCard
+              key={i}
+              c={c}
+              expanded={expanded === i}
+              onToggle={() => setExpanded(expanded === i ? null : i)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
