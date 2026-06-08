@@ -2,8 +2,8 @@ name: 法令自動更新
 
 on:
   schedule:
-    - cron: "0 2 * * 1" # 毎週月曜 午前2時（JST 11時）
-  workflow_dispatch: # 手動実行も可能
+    - cron: "0 15 * * *" # 毎日 深夜0時JST（UTC 15時）
+  workflow_dispatch:
 
 jobs:
   update:
@@ -21,18 +21,20 @@ jobs:
       - name: 依存関係インストール
         run: npm ci
 
-      - name: 新法律を取得・分類
+      - name: 新法律を取得・分類（週1回・月曜のみ）
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 15 * * 1'
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: node scripts/update-laws.mjs
 
-      - name: 全条文をプリフェッチ
+      - name: 全条文をプリフェッチ（週1回・月曜のみ）
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 15 * * 1'
         run: node scripts/prefetch-articles.mjs
 
-      - name: 重要判例をプリジェネレート（未生成のみ）
+      - name: 重要判例をプリジェネレート（毎日30件ずつ）
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: node scripts/prefetch-cases.mjs
+        run: node scripts/prefetch-cases.mjs --limit=30
 
       - name: 変更があればコミット・プッシュ
         run: |
@@ -42,6 +44,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "変更なし"
           else
-            git commit -m "auto: 条文・判例データ更新 $(date +'%Y-%m-%d')"
+            git commit -m "auto: 判例データ更新 $(date +'%Y-%m-%d')"
             git push
           fi

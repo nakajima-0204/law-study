@@ -88,6 +88,8 @@ async function main() {
   console.log(`対象: ${total}件の法律（${DELAY_MS / 1000}秒間隔、最大${MAX_RETRIES}リトライ）`);
 
   const force = process.argv.includes("--force");
+  const limitArg = process.argv.find((a) => a.startsWith("--limit="));
+  const limit = limitArg ? parseInt(limitArg.split("=")[1], 10) : Infinity;
   let saved = 0, skipped = 0, failed = 0;
 
   for (let i = 0; i < laws.length; i++) {
@@ -115,6 +117,11 @@ async function main() {
     } catch (e) {
       console.log(`エラー: ${e.message}`);
       failed++;
+    }
+
+    if (saved >= limit) {
+      console.log(`\n📦 本日の上限 ${limit} 件に達しました。明日以降に続きを処理します。`);
+      break;
     }
 
     if (i < laws.length - 1) {
