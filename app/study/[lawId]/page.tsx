@@ -67,7 +67,7 @@ export default function StudyPage() {
         {tab === "chat" && <ChatPanel lawId={lawId} lawName={law.name} />}
         {tab === "cases" && (
           <div className="h-[calc(100vh-108px)] overflow-y-auto">
-            <CasesPanel lawId={lawId} />
+            <CasesPanel lawId={lawId} lawName={law.name} />
           </div>
         )}
         {tab === "articles" && (

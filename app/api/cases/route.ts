@@ -8,10 +8,38 @@ import { join } from "path";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const lawId = searchParams.get("lawId");
+  const lawName = searchParams.get("lawName");
   if (!lawId) return Response.json([]);
+
+  // 静的ファイルがあれば即返す
   const staticPath = join(process.cwd(), "data", "cases", `${lawId}.json`);
-  if (!existsSync(staticPath)) return Response.json([]);
-  return Response.json(JSON.parse(readFileSync(staticPath, "utf-8")));
+  if (existsSync(staticPath)) {
+    return Response.json(JSON.parse(readFileSync(staticPath, "utf-8")));
+  }
+
+  // なければオンデマンド生成
+  if (!lawName || !process.env.GEMINI_API_KEY) return Response.json([]);
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const prompt = `${lawName}を学ぶ上で絶対に押さえるべき重要判例・リーディングケースを5件教えてください。
+以下のJSON配列形式のみで返してください（説明不要）：
+[{"title":"事件名","court":"裁判所名","date":"判決日","citation":"引用情報","article":"関連条文","summary":"事案概要（2〜3文）","holding":"判旨（2〜3文）","significance":"重要性（1〜2文）","source":"参照URL"}]
+JSONのみ返すこと。`;
+
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: { thinkingConfig: { thinkingBudget: 0 } },
+    });
+
+    const text = response.text ?? "";
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return Response.json([]);
+    return Response.json(JSON.parse(jsonMatch[0]));
+  } catch {
+    return Response.json([]);
+  }
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });

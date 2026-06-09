@@ -17,6 +17,7 @@ type Case = {
 
 type Props = {
   lawId: string;
+  lawName?: string;
 };
 
 function CaseCard({ c, expanded, onToggle }: { c: Case; expanded: boolean; onToggle: () => void }) {
@@ -74,20 +75,37 @@ function CaseCard({ c, expanded, onToggle }: { c: Case; expanded: boolean; onTog
   );
 }
 
-export default function CasesPanel({ lawId }: Props) {
+export default function CasesPanel({ lawId, lawName }: Props) {
   const [query, setQuery] = useState("");
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [landmark, setLandmark] = useState<Case[]>([]);
+  const [landmarkLoading, setLandmarkLoading] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/cases?lawId=${encodeURIComponent(lawId)}`)
+    const cacheKey = `themisia_cases_${lawId}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const data = JSON.parse(cached);
+        if (Array.isArray(data) && data.length > 0) { setLandmark(data); return; }
+      } catch { /* ignore */ }
+    }
+    setLandmarkLoading(true);
+    const url = `/api/cases?lawId=${encodeURIComponent(lawId)}${lawName ? `&lawName=${encodeURIComponent(lawName)}` : ""}`;
+    fetch(url)
       .then((r) => r.json())
-      .then((d) => { if (Array.isArray(d) && d.length > 0) setLandmark(d); })
-      .catch(() => {});
-  }, [lawId]);
+      .then((d) => {
+        if (Array.isArray(d) && d.length > 0) {
+          setLandmark(d);
+          localStorage.setItem(cacheKey, JSON.stringify(d));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLandmarkLoading(false));
+  }, [lawId, lawName]);
 
   async function search() {
     if (!query.trim()) return;
@@ -139,7 +157,14 @@ export default function CasesPanel({ lawId }: Props) {
         </div>
       )}
 
-      {cases.length === 0 && !loading && !searched && landmark.length === 0 && (
+      {cases.length === 0 && !loading && !searched && landmark.length === 0 && landmarkLoading && (
+        <div className="flex flex-col items-center justify-center py-14 gap-3 text-slate-400">
+          <Loader2 className="w-6 h-6 animate-spin text-amber-400" />
+          <p className="text-sm">重要判例を取得中…</p>
+        </div>
+      )}
+
+      {cases.length === 0 && !loading && !searched && landmark.length === 0 && !landmarkLoading && (
         <div className="text-center py-14">
           <Scale className="w-10 h-10 text-slate-700 mx-auto mb-3" />
           <p className="text-slate-400 text-sm">キーワードで関連判例を検索します</p>
