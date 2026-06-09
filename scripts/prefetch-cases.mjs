@@ -13,7 +13,7 @@ const ROOT = join(__dirname, "..");
 const OUT_DIR = join(ROOT, "data", "cases");
 const LAWS_TS = join(ROOT, "lib", "laws.ts");
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-2.5-flash-lite";
 
 // 無料枠: 15RPM → 5秒間隔で安全に収まる
 const DELAY_MS = 5000;
