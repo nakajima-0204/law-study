@@ -41,7 +41,7 @@ export async function searchLawList(keyword: string): Promise<{ id: string; name
 
 function parseArticles(xml: string): ArticleResult[] {
   const articles: ArticleResult[] = [];
-  const articleBlocks = xml.matchAll(/<Article\s+Num="([^"]+)">([\s\S]*?)<\/Article>/g);
+  const articleBlocks = xml.matchAll(/<Article\b[^>]*\bNum="([^"]+)"[^>]*>([\s\S]*?)<\/Article>/g);
 
   for (const block of articleBlocks) {
     const num = block[1];

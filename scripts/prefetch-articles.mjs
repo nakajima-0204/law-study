@@ -35,7 +35,7 @@ function stripTags(s) {
 
 function parseArticles(xml) {
   const articles = [];
-  for (const block of xml.matchAll(/<Article\s+Num="([^"]+)">([\s\S]*?)<\/Article>/g)) {
+  for (const block of xml.matchAll(/<Article\b[^>]*\bNum="([^"]+)"[^>]*>([\s\S]*?)<\/Article>/g)) {
     const num = block[1];
     const inner = block[2];
     const titleMatch = inner.match(/<ArticleTitle>([\s\S]*?)<\/ArticleTitle>/);
