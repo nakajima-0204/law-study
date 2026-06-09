@@ -45,5 +45,6 @@ jobs:
             echo "変更なし"
           else
             git commit -m "auto: 判例データ更新 $(date +'%Y-%m-%d')"
+            git pull --rebase origin master
             git push
           fi
