@@ -65,9 +65,9 @@ export const LAW_DOMAINS: LawDomain[] = [
         name: "選挙・政治",
         laws: [
           { id: "koushoku-senkyo", name: "公職選挙法", egov_id: "325AC1000000100" },
-          { id: "seiji-shikin", name: "政治資金規正法", egov_id: "351AC0000000194" },
+          { id: "seiji-shikin", name: "政治資金規正法", egov_id: "323AC1000000194" },
           { id: "seitou-joseiho", name: "政党助成法", egov_id: "406AC0000000005" },
-          { id: "kokumintohyo", name: "国民投票法", egov_id: "419AC0000000051" },
+          { id: "kokumintohyo", name: "国民投票法", egov_id: "419AC1000000051" },
         ],
       },
       {
@@ -96,7 +96,7 @@ export const LAW_DOMAINS: LawDomain[] = [
           { id: "kodomo-kihon", name: "こども基本法", egov_id: "504AC1000000077" },
           { id: "ijime-boshi", name: "いじめ防止対策推進法", egov_id: "425AC1000000071" },
           { id: "wakamono-shien", name: "子ども・若者育成支援推進法", egov_id: "421AC0000000071" },
-          { id: "kodomo-hinkon", name: "子どもの貧困対策法", egov_id: "425AC0000000064" },
+          { id: "kodomo-hinkon", name: "子どもの貧困対策法", egov_id: "425AC1000000064" },
         ],
       },
       {
@@ -218,7 +218,7 @@ export const LAW_DOMAINS: LawDomain[] = [
           { id: "isho", name: "意匠法", egov_id: "334AC0000000125" },
           { id: "shouhyo", name: "商標法", egov_id: "334AC0000000127" },
           { id: "chosakuken", name: "著作権法", egov_id: "345AC0000000048" },
-          { id: "shubyo", name: "種苗法", egov_id: "416AC0000000083" },
+          { id: "shubyo", name: "種苗法", egov_id: "410AC0000000083" },
           { id: "half-conductor", name: "半導体集積回路法" },
           { id: "chizai-kozan", name: "鉱業法（先願主義・知財との関連）" },
         ],
@@ -322,7 +322,7 @@ export const LAW_DOMAINS: LawDomain[] = [
         laws: [
           { id: "keisosho", name: "刑事訴訟法", egov_id: "323AC0000000131" },
           { id: "keiji-shikko", name: "刑事収容施設法", egov_id: "417AC0000000050" },
-          { id: "higaisha-hogo", name: "犯罪被害者等保護法", egov_id: "411AC0000000075" },
+          { id: "higaisha-hogo", name: "犯罪被害者等保護法", egov_id: "412AC0000000075" },
           { id: "higaisha-kyufu", name: "犯罪被害者給付金支給法", egov_id: "355AC0000000036" },
         ],
       },
@@ -375,7 +375,7 @@ export const LAW_DOMAINS: LawDomain[] = [
           { id: "danjo-sankaku", name: "男女共同参画社会基本法", egov_id: "411AC0000000078" },
           { id: "josei-katsuyaku", name: "女性活躍推進法", egov_id: "427AC0000000064" },
           { id: "dv-shakai", name: "DV防止法（社会法的観点）", egov_id: "413AC0100000031" },
-          { id: "gender-identity", name: "性同一性障害者特例法", egov_id: "416AC0000000111" },
+          { id: "gender-identity", name: "性同一性障害者特例法", egov_id: "415AC0100000111" },
           { id: "lgbt-rikai", name: "LGBT理解増進法", egov_id: "505AC1000000068" },
           { id: "sekuhara", name: "セクハラ・マタハラ防止（均等法）" },
           { id: "marriage-equality", name: "婚姻の平等（議論・判例）" },
@@ -397,8 +397,8 @@ export const LAW_DOMAINS: LawDomain[] = [
           { id: "shougaisha-koyo", name: "障害者雇用促進法", egov_id: "335AC0000000123" },
           { id: "koreisha-fukushi", name: "老人福祉法", egov_id: "338AC0000000133" },
           { id: "kaigo-hoken", name: "介護保険法", egov_id: "409AC0000000123" },
-          { id: "koreisha-gyakutai", name: "高齢者虐待防止法", egov_id: "417AC0000000124" },
-          { id: "seineikouken2", name: "成年後見制度の利用促進法", egov_id: "428AC0000000029" },
+          { id: "koreisha-gyakutai", name: "高齢者虐待防止法", egov_id: "417AC1000000124" },
+          { id: "seineikouken2", name: "成年後見制度の利用促進法", egov_id: "428AC1000000029" },
         ],
       },
       {
@@ -661,7 +661,7 @@ export const LAW_DOMAINS: LawDomain[] = [
         id: "space-law",
         name: "宇宙法・先端科学法",
         laws: [
-          { id: "uchu-kihon", name: "宇宙基本法", egov_id: "420AC0000000043" },
+          { id: "uchu-kihon", name: "宇宙基本法", egov_id: "420AC1000000043" },
           { id: "uchu-katsudo", name: "宇宙活動法（人工衛星等打上法）", egov_id: "428AC0000000076" },
           { id: "eisei-remote", name: "衛星リモートセンシング記録法", egov_id: "428AC0000000077" },
           { id: "uchu-joyaku2", name: "宇宙条約・月協定（国際宇宙法）" },
