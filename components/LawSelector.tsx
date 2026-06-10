@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LAW_DOMAINS, LawDomain, AutoLaw } from "@/lib/laws";
 import autoLawsData from "@/data/auto-laws.json";
 import { BookOpen, ArrowLeft, ChevronRight, Sparkles, Scale } from "lucide-react";
 import LawSearch from "@/components/LawSearch";
 import HomeConsult from "@/components/HomeConsult";
+import { prefetchCases, backgroundPrefetchAll } from "@/lib/prefetch";
 
 const autoLaws = autoLawsData as AutoLaw[];
 
@@ -26,6 +27,14 @@ type Props = {
 
 export default function LawSelector({ onSelect }: Props) {
   const [selectedDomain, setSelectedDomain] = useState<LawDomain | null>(null);
+
+  useEffect(() => {
+    const allLaws = [
+      ...LAW_DOMAINS.flatMap((d) => d.categories.flatMap((c) => c.laws)),
+      ...autoLaws,
+    ];
+    backgroundPrefetchAll(allLaws);
+  }, []);
 
   if (selectedDomain) {
     const domainAutoLaws = autoLaws.filter((l) => l.domain === selectedDomain.id);
@@ -60,6 +69,7 @@ export default function LawSelector({ onSelect }: Props) {
                     <button
                       key={law.id}
                       onClick={() => onSelect(law.id)}
+                      onMouseEnter={() => prefetchCases(law.id, law.name)}
                       className="bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-amber-500/60 text-white rounded-xl p-3.5 text-left transition-all group active:scale-95"
                     >
                       <span className="text-sm font-medium group-hover:text-amber-300 transition-colors leading-snug">
@@ -73,6 +83,7 @@ export default function LawSelector({ onSelect }: Props) {
                       <button
                         key={law.id}
                         onClick={() => onSelect(law.id)}
+                        onMouseEnter={() => prefetchCases(law.id, law.name)}
                         className="bg-slate-800 hover:bg-slate-700 border border-emerald-800/50 hover:border-emerald-500/60 text-white rounded-xl p-3.5 text-left transition-all group active:scale-95"
                       >
                         <div className="flex items-center gap-1 mb-1">

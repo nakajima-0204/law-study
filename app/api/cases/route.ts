@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     return Response.json({ error: check.reason }, { status: 401 });
   }
 
-  const { lawId, query, type } = await req.json();
+  const { lawId, query, type, caseData } = await req.json();
 
   const law = getLawById(lawId);
   const lawName = law?.name ?? "法律全般";
@@ -115,6 +115,35 @@ ${OFFICIAL_SOURCES}
 ${caseSchema}
 
 JSONのみを返してください。前後に説明を入れないこと。`;
+
+  } else if (type === "situation") {
+    prompt = `${lawName}の分野で、次の状況・事実関係に最も関連する判例を3〜5件、最高裁判所判例集から探してください。
+
+状況：「${query}」
+
+この状況に当てはまる当事者・争点・法的結論が参考になる判例を優先してください。
+
+${OFFICIAL_SOURCES}
+
+以下のJSON配列形式のみで返してください：
+${caseSchema}
+
+JSONのみを返してください。前後に説明を入れないこと。`;
+
+  } else if (type === "explain") {
+    const cd = caseData ?? {};
+    prompt = `以下の判例を3段階の難易度で解説してください。
+
+判例：${cd.title ?? ""}
+裁判所：${cd.court ?? ""}　日付：${cd.date ?? ""}
+事案：${cd.summary ?? ""}
+判旨：${cd.holding ?? ""}
+意義：${cd.significance ?? ""}
+
+以下のJSON形式のみで返してください（改行なしのコンパクトなJSON）：
+{"easy":"中学生でもわかる言葉で解説。法律用語なし、たとえ話あり（200〜250字）","legal":"法学部生向け。争点・要件・判旨の法的意義を体系的に（300〜350字）","practical":"弁護士・企業法務向け。実務への影響・注意点・後続判例展開（300〜350字）"}
+
+JSONのみ返すこと。前後に文章を入れないこと。`;
 
   } else if (type === "recent") {
     prompt = `${lawName}に関する直近2〜3年以内の新しい判例・法改正・重要な法的動向を最高裁判所（https://www.courts.go.jp）・e-Gov（https://laws.e-gov.go.jp）・法務省の公式情報から5件教えてください。

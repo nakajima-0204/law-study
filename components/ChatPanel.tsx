@@ -12,28 +12,49 @@ type Message = {
   content: string;
 };
 
+type CaseContext = {
+  title: string;
+  court: string;
+  date: string;
+  citation?: string;
+  summary: string;
+  holding: string;
+  significance: string;
+};
+
 type Props = {
   lawId: string;
   lawName: string;
+  caseContext?: CaseContext;
+  initialUserMessage?: string;
 };
 
-export default function ChatPanel({ lawId, lawName }: Props) {
+export default function ChatPanel({ lawId, lawName, caseContext, initialUserMessage }: Props) {
+  const greeting = caseContext
+    ? `**${caseContext.title}**について解説します。\n\n事案・判旨・意義、関連条文への適用など、何でも聞いてください。`
+    : `**${lawName}**について何でも聞いてください。\n\n条文の解説、判例の分析、具体的な事例への適用など、お気軽にどうぞ。`;
+
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "0",
-      role: "assistant",
-      content: `**${lawName}**について何でも聞いてください。\n\n条文の解説、判例の分析、具体的な事例への適用など、お気軽にどうぞ。`,
-    },
+    { id: "0", role: "assistant", content: greeting },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const didAutoSend = useRef(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (initialUserMessage && !didAutoSend.current) {
+      didAutoSend.current = true;
+      send(initialUserMessage);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function autoResize() {
     const el = textareaRef.current;
@@ -66,7 +87,7 @@ export default function ChatPanel({ lawId, lawName }: Props) {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: newMessages, lawId, imageBase64 }),
+      body: JSON.stringify({ messages: newMessages, lawId, imageBase64, caseContext }),
     });
 
     const reader = res.body!.getReader();

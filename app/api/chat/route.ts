@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     return Response.json({ error: check.reason }, { status: 401 });
   }
 
-  const { messages, lawId, imageBase64 } = await req.json();
+  const { messages, lawId, imageBase64, caseContext } = await req.json();
 
   const law = getLawById(lawId);
   const lawName = law?.name ?? "法律全般";
@@ -24,6 +24,10 @@ export async function POST(req: Request) {
   const articles = await articlesPromise;
   const lawContext = articles.length > 0
     ? `\n\n━━ e-Gov公式条文（https://laws.e-gov.go.jp）━━\n${articlesToContext(articles, 3000)}`
+    : "";
+
+  const caseCtx = caseContext
+    ? `\n\n━━ 現在議論している判例 ━━\n事件名：${caseContext.title}\n裁判所・日付：${caseContext.court} ${caseContext.date}\n引用：${caseContext.citation ?? ""}\n事案概要：${caseContext.summary}\n判旨：${caseContext.holding}\n意義：${caseContext.significance}\n\nこの判例を中心に回答してください。`
     : "";
 
   const systemInstruction = `あなたは${lawName}を専門とする法学の第一人者であり、優れた教育者です。
@@ -76,7 +80,7 @@ export async function POST(req: Request) {
 - 根拠なき断言（判例・条文・通説の裏付けなしに「〜です」と言い切らない）
 - 古い法律知識の提供（法改正を確認する）
 - 表面的な説明のみで終わる（なぜそうなのかの理由まで説明する）
-${lawContext}`;
+${lawContext}${caseCtx}`;
 
   const contents = messages.map((m: { role: string; content: string }, i: number) => {
     const isLast = i === messages.length - 1;

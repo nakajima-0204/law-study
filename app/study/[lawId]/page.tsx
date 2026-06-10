@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { getLawById, AutoLaw } from "@/lib/laws";
 import autoLawsData from "@/data/auto-laws.json";
@@ -9,6 +9,11 @@ import CasesPanel from "@/components/CasesPanel";
 import NotesPanel from "@/components/NotesPanel";
 import ArticleSearchPanel from "@/components/ArticleSearchPanel";
 import { ArrowLeft, MessageSquare, Scale, FileText, BookOpen } from "lucide-react";
+
+type CaseForChat = {
+  title: string; court: string; date: string; citation?: string;
+  summary: string; holding: string; significance: string;
+};
 
 const autoLaws = autoLawsData as AutoLaw[];
 
@@ -24,6 +29,14 @@ export default function StudyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState(searchParams.get("tab") ?? "chat");
+  const [caseForChat, setCaseForChat] = useState<CaseForChat | undefined>();
+  const [chatInitMsg, setChatInitMsg] = useState<string | undefined>();
+
+  const handleChatAboutCase = useCallback((c: CaseForChat) => {
+    setCaseForChat(c);
+    setChatInitMsg(`「${c.title}」について詳しく教えてください。この判例が確立した法理・実務への影響・試験での重要ポイントを解説してください。`);
+    setTab("chat");
+  }, []);
 
   const law = getLawById(lawId, autoLaws);
   if (!law) return <p className="text-white p-8">法律が見つかりません</p>;
@@ -64,10 +77,18 @@ export default function StudyPage() {
       </div>
 
       <main className="flex-1 overflow-hidden">
-        {tab === "chat" && <ChatPanel lawId={lawId} lawName={law.name} />}
+        {tab === "chat" && (
+          <ChatPanel
+            key={chatInitMsg}
+            lawId={lawId}
+            lawName={law.name}
+            caseContext={caseForChat}
+            initialUserMessage={chatInitMsg}
+          />
+        )}
         {tab === "cases" && (
           <div className="h-[calc(100vh-108px)] overflow-y-auto">
-            <CasesPanel lawId={lawId} lawName={law.name} />
+            <CasesPanel lawId={lawId} lawName={law.name} onChatAboutCase={handleChatAboutCase} />
           </div>
         )}
         {tab === "articles" && (
