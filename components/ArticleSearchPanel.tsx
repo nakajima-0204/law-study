@@ -71,16 +71,6 @@ function ArticleCard({
           ) : (
             <p className="text-slate-300 text-sm leading-loose">{article.paragraphs[0]}</p>
           )}
-          <div className="pt-2 border-t border-slate-700/50">
-            <a
-              href={`https://laws.e-gov.go.jp/law/${article.num}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-slate-500 hover:text-amber-400 transition-colors"
-            >
-              e-Gov で確認する →
-            </a>
-          </div>
         </div>
       )}
     </div>

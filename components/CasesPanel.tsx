@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import {
-  Loader2, Search, ChevronDown, ChevronUp, ExternalLink, Scale,
+  Loader2, Search, ChevronDown, ChevronUp, Scale,
   BookOpen, MessageSquare,
 } from "lucide-react";
 
@@ -80,7 +80,9 @@ function CaseCard({
               )}
             </div>
             <h3 className="text-white font-semibold text-sm leading-snug mb-1">{c.title}</h3>
-            {c.article && <span className="text-xs text-blue-400">📖 {c.article}</span>}
+            {c.article && (
+              <span className={`text-xs text-blue-400 ${!expanded ? "line-clamp-1" : ""}`}>📖 {c.article}</span>
+            )}
             {!expanded && (
               <p className="text-slate-400 text-xs mt-2 line-clamp-2 leading-relaxed">{c.summary}</p>
             )}
@@ -99,19 +101,18 @@ function CaseCard({
           </div>
           <div>
             <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1.5">判旨・要旨</p>
-            <p className="text-slate-300 text-sm leading-relaxed">{c.holding}</p>
+            {c.holding ? (
+              <p className="text-slate-300 text-sm leading-relaxed">{c.holding}</p>
+            ) : (
+              <p className="text-slate-500 text-xs italic">判旨の要約は掲載なし。詳細は全文（courts.go.jp）をご確認ください。</p>
+            )}
           </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">重要性・実務影響</p>
-            <p className="text-slate-300 text-sm leading-relaxed">{c.significance}</p>
-          </div>
-          {c.source && (
-            <a href={c.source} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-amber-400 transition-colors">
-              <ExternalLink className="w-3 h-3" />出典: {c.source}
-            </a>
+          {c.significance && (
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">重要性・実務影響</p>
+              <p className="text-slate-300 text-sm leading-relaxed">{c.significance}</p>
+            </div>
           )}
-
           {/* アクションボタン */}
           <div className="flex gap-2 pt-1 flex-wrap">
             <button
@@ -122,7 +123,7 @@ function CaseCard({
                   : "bg-slate-700 border-slate-600 text-slate-300 hover:border-emerald-500/40 hover:text-emerald-400"
               }`}
             >
-              <BookOpen className="w-3.5 h-3.5" />難易度別解説
+              <BookOpen className="w-3.5 h-3.5" />AI解説
             </button>
             {onChatAboutCase && (
               <button
@@ -172,6 +173,17 @@ function CaseCard({
   );
 }
 
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, n);
+}
+
+const DISPLAY_COUNT = 5;
+
 export default function CasesPanel({ lawId, lawName, onChatAboutCase }: Props) {
   const [searchMode, setSearchMode] = useState<"keyword" | "situation">("keyword");
   const [query, setQuery] = useState("");
@@ -180,15 +192,22 @@ export default function CasesPanel({ lawId, lawName, onChatAboutCase }: Props) {
   const [searched, setSearched] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [landmark, setLandmark] = useState<Case[]>([]);
+  const [displayed, setDisplayed] = useState<Case[]>([]);
   const [landmarkLoading, setLandmarkLoading] = useState(false);
 
   useEffect(() => {
-    const cacheKey = `themisia_cases_${lawId}`;
+    const cacheKey = `themisia_cases_v2_${lawId}`;
+    const CACHE_TTL = 3 * 24 * 60 * 60 * 1000; // 3日
+    const CACHE_MAX = 200; // localStorage には最大200件
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
-        const data = JSON.parse(cached);
-        if (Array.isArray(data) && data.length > 0) { setLandmark(data); return; }
+        const { data, ts } = JSON.parse(cached);
+        if (Array.isArray(data) && data.length > 0 && Date.now() - ts < CACHE_TTL) {
+          setLandmark(data);
+          setDisplayed(pickRandom(data, DISPLAY_COUNT));
+          return;
+        }
       } catch { /* ignore */ }
     }
     setLandmarkLoading(true);
@@ -198,7 +217,12 @@ export default function CasesPanel({ lawId, lawName, onChatAboutCase }: Props) {
       .then((d) => {
         if (Array.isArray(d) && d.length > 0) {
           setLandmark(d);
-          localStorage.setItem(cacheKey, JSON.stringify(d));
+          setDisplayed(pickRandom(d, DISPLAY_COUNT));
+          try {
+            // 大量件数はランダムサンプルのみキャッシュ
+            const toCache = d.length > CACHE_MAX ? pickRandom(d, CACHE_MAX) : d;
+            localStorage.setItem(cacheKey, JSON.stringify({ data: toCache, ts: Date.now() }));
+          } catch { /* quota exceeded → skip */ }
         }
       })
       .catch(() => {})
@@ -272,10 +296,18 @@ export default function CasesPanel({ lawId, lawName, onChatAboutCase }: Props) {
 
       {cases.length === 0 && !loading && !searched && landmark.length > 0 && (
         <div className="space-y-3">
-          <p className="text-xs text-slate-500 px-1">重要判例</p>
-          {landmark.map((c, i) => (
+          <div className="flex items-center justify-between px-1">
+            <p className="text-xs text-slate-500">判例 {landmark.length}件中 ランダム{displayed.length}件表示</p>
+            <button
+              onClick={() => { setDisplayed(pickRandom(landmark, DISPLAY_COUNT)); setExpanded(null); }}
+              className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+            >
+              ↻ 再抽選
+            </button>
+          </div>
+          {displayed.map((c, i) => (
             <CaseCard
-              key={i}
+              key={`${c.title}-${i}`}
               c={c}
               expanded={expanded === -(i + 1)}
               onToggle={() => setExpanded(expanded === -(i + 1) ? null : -(i + 1))}

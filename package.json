@@ -14,7 +14,9 @@
   "dependencies": {
     "@clerk/nextjs": "^7.4.3",
     "@google/genai": "^2.8.0",
+    "@neondatabase/serverless": "^1.1.0",
     "@stripe/stripe-js": "^9.7.0",
+    "dotenv": "^17.4.2",
     "lucide-react": "^1.17.0",
     "next": "16.2.7",
     "react": "19.2.4",
@@ -27,10 +29,12 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
+    "pg": "^8.21.0",
     "playwright": "^1.60.0",
     "tailwindcss": "^4",
     "typescript": "^5"

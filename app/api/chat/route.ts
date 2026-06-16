@@ -107,6 +107,7 @@ ${lawContext}${caseCtx}`;
     contents,
     config: {
       systemInstruction,
+      maxOutputTokens: 8192,
       thinkingConfig: { thinkingBudget: 0 },
     },
   });
