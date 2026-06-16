@@ -1,0 +1,82 @@
+name: 国際判例週次更新
+
+on:
+  schedule:
+    - cron: "0 16 * * 0" # 毎週日曜 深夜1時JST（UTC 16時）
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "強制再取込（既存データを上書き）"
+        type: boolean
+        default: false
+
+jobs:
+  update-intl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 依存関係インストール
+        run: npm ci
+
+      - name: Playwright インストール
+        run: npx playwright install chromium --with-deps
+
+      - name: ECHR（欧州人権裁判所）判例更新
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: |
+          FORCE=${{ inputs.force == true && '--force' || '' }}
+          node scripts/fetch-cases-hudoc.mjs $FORCE --limit=50
+        continue-on-error: true
+
+      - name: ICJ（国際司法裁判所）判例更新
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: |
+          FORCE=${{ inputs.force == true && '--force' || '' }}
+          node scripts/fetch-cases-icj.mjs $FORCE
+        continue-on-error: true
+
+      - name: WTO紛争解決判例更新
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: |
+          FORCE=${{ inputs.force == true && '--force' || '' }}
+          node scripts/fetch-cases-wto.mjs $FORCE --limit=50
+        continue-on-error: true
+
+      - name: SCOTUS（米国最高裁）判例更新
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: |
+          FORCE=${{ inputs.force == true && '--force' || '' }}
+          node scripts/fetch-cases-scotus.mjs $FORCE
+        continue-on-error: true
+
+      - name: CJEU（欧州司法裁判所）判例更新
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: |
+          FORCE=${{ inputs.force == true && '--force' || '' }}
+          node scripts/fetch-cases-cjeu.mjs $FORCE
+        continue-on-error: true
+
+      - name: 英語判例 日本語翻訳（最大100件）
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/translate-cases.mjs --limit=100
+        continue-on-error: true

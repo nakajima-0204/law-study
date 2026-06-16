@@ -84,6 +84,7 @@ export default function StudyPage() {
             lawName={law.name}
             caseContext={caseForChat}
             initialUserMessage={chatInitMsg}
+            onSelectCase={(c) => handleChatAboutCase(c)}
           />
         )}
         {tab === "cases" && (

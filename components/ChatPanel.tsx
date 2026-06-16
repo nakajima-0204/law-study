@@ -22,14 +22,40 @@ type CaseContext = {
   significance: string;
 };
 
+type RelatedCase = {
+  id: number;
+  title: string;
+  court: string;
+  date: string;
+  citation?: string;
+  summary: string;
+  holding: string;
+  significance: string;
+};
+
 type Props = {
   lawId: string;
   lawName: string;
   caseContext?: CaseContext;
   initialUserMessage?: string;
+  onSelectCase?: (c: RelatedCase) => void;
 };
 
-export default function ChatPanel({ lawId, lawName, caseContext, initialUserMessage }: Props) {
+const STARTER_QUESTIONS = [
+  "この法律の一番重要なポイントを3つ教えて",
+  "試験に出やすい条文と論点は？",
+  "具体的な事例で解説して",
+  "代表的な判例と、そこから学ぶべきことは？",
+];
+
+const CASE_STARTER_QUESTIONS = [
+  "この判例の重要性を簡単に教えて",
+  "試験でどう問われる？",
+  "この判例が確立した法理を解説して",
+  "後続の判例・実務への影響は？",
+];
+
+export default function ChatPanel({ lawId, lawName, caseContext, initialUserMessage, onSelectCase }: Props) {
   const greeting = caseContext
     ? `**${caseContext.title}**について解説します。\n\n事案・判旨・意義、関連条文への適用など、何でも聞いてください。`
     : `**${lawName}**について何でも聞いてください。\n\n条文の解説、判例の分析、具体的な事例への適用など、お気軽にどうぞ。`;
@@ -39,6 +65,7 @@ export default function ChatPanel({ lawId, lawName, caseContext, initialUserMess
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [relatedCases, setRelatedCases] = useState<RelatedCase[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -104,6 +131,20 @@ export default function ChatPanel({ lawId, lawName, caseContext, initialUserMess
     }
 
     setLoading(false);
+
+    // 最初のAI返答後に関連判例を取得（1回だけ）
+    if (relatedCases.length === 0 && !caseContext) {
+      fetch(`/api/cases?lawId=${encodeURIComponent(lawId)}`)
+        .then(r => r.json())
+        .then((cases: RelatedCase[]) => {
+          if (Array.isArray(cases) && cases.length > 0) {
+            // シャッフルして3件表示
+            const shuffled = [...cases].sort(() => Math.random() - 0.5);
+            setRelatedCases(shuffled.slice(0, 3));
+          }
+        })
+        .catch(() => {});
+    }
   }
 
   async function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -122,6 +163,20 @@ export default function ChatPanel({ lawId, lawName, caseContext, initialUserMess
     <div className="flex flex-col h-[calc(100vh-108px)]">
       {/* メッセージ一覧 */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        {messages.length === 1 && !loading && (
+          <div className="flex flex-wrap gap-2 mt-2 mb-2">
+            {(caseContext ? CASE_STARTER_QUESTIONS : STARTER_QUESTIONS).map((q) => (
+              <button
+                key={q}
+                onClick={() => send(q)}
+                className="text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:border-amber-500/60 hover:text-amber-400 transition-colors text-left"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
         {messages.map((m) => (
           <div
             key={m.id}
@@ -173,6 +228,32 @@ export default function ChatPanel({ lawId, lawName, caseContext, initialUserMess
             </div>
           </div>
         ))}
+        {/* 関連判例チップ */}
+        {relatedCases.length > 0 && !loading && (
+          <div className="mt-3 mb-1">
+            <p className="text-xs text-slate-500 mb-2 px-1">関連判例</p>
+            <div className="flex flex-col gap-1.5">
+              {relatedCases.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    if (onSelectCase) {
+                      onSelectCase(c);
+                    } else {
+                      send(`「${c.title}」について詳しく教えてください。`);
+                      setRelatedCases([]);
+                    }
+                  }}
+                  className="text-left text-xs px-3 py-2 rounded-xl bg-slate-800/80 border border-slate-700 hover:border-amber-500/50 hover:bg-slate-800 transition-colors group"
+                >
+                  <span className="text-amber-400 font-medium group-hover:text-amber-300 line-clamp-1">{c.title}</span>
+                  <span className="text-slate-500 ml-1.5">{c.court} {c.date?.slice(0, 4)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
