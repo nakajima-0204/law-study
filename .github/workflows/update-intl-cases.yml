@@ -73,10 +73,11 @@ jobs:
           node scripts/fetch-cases-cjeu.mjs $FORCE
         continue-on-error: true
 
-      - name: 英語判例 日本語翻訳（最大100件）
+      - name: 英語判例 日本語翻訳（最大50件）
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: node scripts/translate-cases.mjs --limit=100
+          # GEMINI_API_KEY_BATCH を別途設定することで本番キーのクォータを守る
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY_BATCH || secrets.GEMINI_API_KEY }}
+        run: node scripts/translate-cases.mjs --limit=50
         continue-on-error: true

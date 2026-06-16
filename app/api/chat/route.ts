@@ -102,22 +102,44 @@ ${lawContext}${caseCtx}`;
     };
   });
 
-  const response = await ai.models.generateContentStream({
-    model: GEMINI_MODEL,
-    contents,
-    config: {
-      systemInstruction,
-      maxOutputTokens: 8192,
-      thinkingConfig: { thinkingBudget: 0 },
-    },
-  });
+  let response;
+  try {
+    response = await ai.models.generateContentStream({
+      model: GEMINI_MODEL,
+      contents,
+      config: {
+        systemInstruction,
+        maxOutputTokens: 8192,
+        thinkingConfig: { thinkingBudget: 0 },
+      },
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[chat] generateContentStream failed:", msg.slice(0, 200));
+    const isQuota = msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED");
+    const isOverload = msg.includes("503") || msg.includes("overloaded") || msg.includes("UNAVAILABLE");
+    const userMsg = isQuota
+      ? "APIの利用制限に達しました。しばらく時間をおいてから再度お試しください。"
+      : isOverload
+      ? "AIサーバーが一時的に混雑しています。少し待ってから再試行してください。"
+      : "AIの応答に失敗しました。再度お試しください。";
+    return new Response(userMsg, {
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
-      for await (const chunk of response) {
-        const text = chunk.text;
-        if (text) controller.enqueue(encoder.encode(text));
+      try {
+        for await (const chunk of response) {
+          const text = chunk.text;
+          if (text) controller.enqueue(encoder.encode(text));
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error("[chat] stream error:", msg.slice(0, 200));
+        controller.enqueue(encoder.encode("\n\n⚠️ 応答が途中で中断されました。"));
       }
       controller.close();
     },
