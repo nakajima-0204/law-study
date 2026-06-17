@@ -2,7 +2,7 @@ name: 国際判例週次更新
 
 on:
   schedule:
-    - cron: "0 16 * * 0" # 毎週日曜 深夜1時JST（UTC 16時）
+    - cron: "0 16 * * *" # 毎日 深夜1時JST（UTC 16時）
   workflow_dispatch:
     inputs:
       force:
@@ -79,5 +79,5 @@ jobs:
           DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
           # GEMINI_API_KEY_BATCH を別途設定することで本番キーのクォータを守る
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY_BATCH || secrets.GEMINI_API_KEY }}
-        run: node scripts/translate-cases.mjs --limit=50
+        run: node scripts/translate-cases.mjs --limit=250
         continue-on-error: true
