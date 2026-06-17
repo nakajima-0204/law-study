@@ -1,0 +1,27 @@
+name: 法改正チェック
+
+on:
+  schedule:
+    - cron: "0 17 * * 1" # 毎週月曜 深夜2時JST（UTC 17時）
+  workflow_dispatch:
+
+jobs:
+  check-revisions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 依存関係インストール
+        run: npm ci
+
+      - name: 法改正チェック（e-Gov API）
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+        run: node scripts/check-law-revisions.mjs
